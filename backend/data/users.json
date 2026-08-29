@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "Admin User",
+    "email": "admin@store.com",
+    "password": "$2a$10$9YlaKwLih9y91LPGC.xdCeZlyW2.q4tHNiCk7fPwlYZ6/kO0aSjZq",
+    "role": "admin",
+    "status": "active",
+    "created_at": "2026-07-31T07:21:20.964Z"
+  },
+  {
+    "id": 2,
+    "name": "Staff User",
+    "email": "staff@store.com",
+    "password": "$2a$10$9YlaKwLih9y91LPGC.xdCekdnhETFW8jPXkriCxUCivm56j8kKvWG",
+    "role": "staff",
+    "status": "active",
+    "created_at": "2026-07-31T07:21:20.986Z"
+  },
+  {
+    "id": 3,
+    "name": "Juan Customer",
+    "email": "juan@email.com",
+    "password": "$2a$10$9YlaKwLih9y91LPGC.xdCeMbSjjda0oj6bJlywM6aA7cjeNwuJMZ6",
+    "role": "user",
+    "status": "active",
+    "created_at": "2026-07-31T07:21:20.989Z"
+  }
+]

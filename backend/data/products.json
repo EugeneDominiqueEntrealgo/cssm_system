@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1,
+    "name": "Coca-Cola 1.5L",
+    "description": "Soft drink bottle 1.5 liters",
+    "price": 55,
+    "stock": 50,
+    "category": "Beverages",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.991Z"
+  },
+  {
+    "id": 2,
+    "name": "Chips Ahoy Cookies",
+    "description": "Chocolate chip cookies 150g",
+    "price": 45,
+    "stock": 30,
+    "category": "Snacks",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.992Z"
+  },
+  {
+    "id": 3,
+    "name": "Mega Sardines",
+    "description": "Sardines in tomato sauce 155g",
+    "price": 25,
+    "stock": 40,
+    "category": "Canned Goods",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.992Z"
+  },
+  {
+    "id": 4,
+    "name": "Nescafe 3-in-1 (30 packs)",
+    "description": "Instant coffee mix 30 sticks",
+    "price": 120,
+    "stock": 20,
+    "category": "Beverages",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.993Z"
+  },
+  {
+    "id": 5,
+    "name": "Skyflakes Crackers",
+    "description": "Saltine crackers 25g",
+    "price": 8,
+    "stock": 100,
+    "category": "Snacks",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.994Z"
+  },
+  {
+    "id": 6,
+    "name": "Lucky Me Instant Noodles",
+    "description": "Chicken flavor instant noodles",
+    "price": 15,
+    "stock": 60,
+    "category": "Noodles",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.994Z"
+  },
+  {
+    "id": 7,
+    "name": "Bear Brand Powdered Milk",
+    "description": "Powdered milk 300g",
+    "price": 95,
+    "stock": 25,
+    "category": "Dairy",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.995Z"
+  },
+  {
+    "id": 8,
+    "name": "Pancit Canton (Sweet & Spicy)",
+    "description": "Instant stir-fry noodles",
+    "price": 18,
+    "stock": 45,
+    "category": "Noodles",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.996Z"
+  },
+  {
+    "id": 9,
+    "name": "Safeguard Soap",
+    "description": "Antibacterial soap 90g",
+    "price": 35,
+    "stock": 35,
+    "category": "Personal Care",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.997Z"
+  },
+  {
+    "id": 10,
+    "name": "Canned Tuna",
+    "description": "Canned tuna in oil 155g",
+    "price": 28,
+    "stock": 50,
+    "category": "Canned Goods",
+    "status": "active",
+    "created_by": 2,
+    "created_at": "2026-07-31T07:21:20.998Z"
+  }
+]

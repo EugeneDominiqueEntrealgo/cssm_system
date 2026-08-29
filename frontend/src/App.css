@@ -1,0 +1,704 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Poppins', 'Segoe UI', -apple-system, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 1rem;
+}
+
+/* ===== Scrollbar Styling ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F0F1F5;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0D9488, #2DD4BF);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0F766E, #0D9488);
+}
+
+/* ===== Page Layout ===== */
+.page-container {
+  min-height: calc(100vh - 64px - 60px);
+  padding: 32px 24px;
+  animation: fadeInUp 0.5s ease;
+}
+
+.page-title {
+  margin-bottom: 24px;
+  color: #0F172A;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #0D9488, #99F6E4);
+}
+
+/* ===== Premium Cards ===== */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: all 0.25s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+
+/* ===== Modern Stat Cards ===== */
+.stat-card {
+  text-align: center;
+  padding: 20px 16px;
+  border-radius: 16px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+
+.stat-card:active {
+  transform: scale(0.96);
+}
+
+.stat-card .MuiSvgIcon-root {
+  font-size: 36px;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.stat-card h3,
+.stat-card .MuiTypography-h3 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 6px 0;
+  line-height: 1.2;
+}
+
+.stat-card p,
+.stat-card .MuiTypography-body2 {
+  font-size: 12px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.stat-card.blue { background: linear-gradient(135deg, #3B82F6, #7AA7F5); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2); }
+.stat-card.green { background: linear-gradient(135deg, #0D9488, #2DD4BF); box-shadow: 0 6px 20px rgba(13, 148, 136, 0.2); }
+.stat-card.orange { background: linear-gradient(135deg, #F59E0B, #FCD34D); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2); }
+.stat-card.red { background: linear-gradient(135deg, #EF4444, #F7A3A3); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); }
+.stat-card.purple { background: linear-gradient(135deg, #8B5CF6, #B7A4F5); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.2); }
+
+/* ===== Homepage Hero ===== */
+.homepage-banner {
+  background: linear-gradient(135deg, #064E3B 0%, #0F766E 45%, #0F172A 100%);
+  color: white;
+  padding: 80px 24px;
+  text-align: center;
+  border-radius: 0 0 32px 32px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.homepage-banner::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: floatBlob 6s ease-in-out infinite;
+}
+
+.homepage-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255,107,107,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: floatBlob 8s ease-in-out infinite reverse;
+}
+
+.homepage-banner .MuiSvgIcon-root {
+  font-size: 72px;
+  margin-bottom: 16px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+.homepage-banner h1 {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.homepage-banner p {
+  font-size: 18px;
+  opacity: 0.95;
+  max-width: 600px;
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.homepage-banner .MuiButton-root {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  padding: 12px 32px;
+}
+
+/* ===== Product Grid & Cards ===== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0,0,0,0.04);
+  cursor: pointer;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(13, 148, 136, 0.12);
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+.product-card .product-image {
+  height: 180px;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0D9488;
+  font-size: 56px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card .product-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13,148,136,0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-card:hover .product-image::before {
+  opacity: 1;
+}
+
+.product-card:hover .product-image {
+  background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+}
+
+.product-card .product-image .MuiSvgIcon-root {
+  animation: none;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image .MuiSvgIcon-root {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.product-card .MuiCardContent-root {
+  padding: 20px;
+}
+
+.product-card .product-details {
+  padding: 20px;
+}
+
+.product-card .product-details h3 {
+  margin-bottom: 8px;
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.product-card .product-details .price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0D9488;
+  margin-bottom: 4px;
+}
+
+.product-card .product-details .stock {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.stock-available {
+  color: #0D9488;
+  background: rgba(13, 148, 136, 0.1);
+}
+
+.stock-low {
+  color: #B45309;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.stock-out {
+  color: #DC2626;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ===== Promo Banner ===== */
+.promo-banner {
+  background: linear-gradient(135deg, #F59E0B 0%, #F43F5E 100%);
+  color: white;
+  padding: 20px 24px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
+}
+
+.promo-banner::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.promo-banner:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.3);
+}
+
+.promo-banner:active {
+  transform: scale(0.97);
+}
+
+.promo-banner h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.promo-banner .discount-badge {
+  background: rgba(255,255,255,0.25);
+  padding: 6px 16px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 15px;
+  backdrop-filter: blur(8px);
+}
+
+/* ===== Login Container ===== */
+.login-container {
+  max-width: 440px;
+  margin: 60px auto;
+  padding: 40px 36px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(26, 26, 46, 0.12);
+  border: 1px solid rgba(0,0,0,0.04);
+  animation: fadeInUp 0.5s ease;
+}
+
+.login-container h2 {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #0F172A;
+  font-weight: 700;
+}
+
+.login-container .MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+.login-container .MuiButton-contained {
+  margin-bottom: 12px;
+  font-size: 15px;
+  padding: 10px 20px;
+}
+
+/* ===== Receipt Styles ===== */
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 2px dashed #E2E8F0;
+  transition: background-color 0.2s ease;
+}
+
+.receipt-item:hover {
+  background-color: rgba(13, 148, 136, 0.04);
+}
+
+.receipt-total {
+  text-align: right;
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 3px solid #0F172A;
+  color: #0D9488;
+}
+
+/* ===== Charts ===== */
+.chart-container {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: all 0.25s ease;
+}
+
+.chart-container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+
+/* ===== Quick Action Cards ===== */
+.quick-action-card {
+  text-align: center;
+  padding: 24px;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-6px);
+}
+
+.quick-action-card:active {
+  transform: scale(0.95);
+}
+
+/* ===== Page Header Banner ===== */
+.page-header {
+  background: linear-gradient(135deg, #0F766E 0%, #0D9488 60%, #0F172A 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.18);
+  animation: fadeInUp 0.5s ease;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header .page-header-icon {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.page-header .page-header-icon .MuiSvgIcon-root {
+  font-size: 40px;
+  color: #5EEAD4;
+}
+
+.page-header h1,
+.page-header .page-header-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-header p,
+.page-header .page-header-subtitle {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin: 4px 0 0;
+}
+
+/* ===== Dashboard Greeting ===== */
+.greeting-banner {
+  background: linear-gradient(135deg, #0F172A 0%, #0F766E 75%, #0D9488 130%);
+  color: white;
+  border-radius: 20px;
+  padding: 32px 36px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.18);
+  animation: fadeInUp 0.5s ease;
+}
+
+.greeting-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  right: -40px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.greeting-banner h2 {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.greeting-banner p {
+  font-size: 1.05rem;
+  opacity: 0.95;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.greeting-banner .MuiSvgIcon-root {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* ===== Glassmorphism Cards ===== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Improved Stat Cards (larger numbers for elderly) ===== */
+.stat-card .stat-value {
+  font-size: 40px;
+  font-weight: 800;
+  margin: 8px 0;
+  line-height: 1.1;
+}
+
+.stat-card .stat-label {
+  font-size: 15px;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+/* ===== Friendly Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-state .empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  display: inline-block;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  color: #64748B;
+  margin-bottom: 16px;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, 20px) scale(1.1); }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Animation Utility Classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.animate-delay-1 { animation-delay: 0.1s; }
+.animate-delay-2 { animation-delay: 0.2s; }
+.animate-delay-3 { animation-delay: 0.3s; }
+.animate-delay-4 { animation-delay: 0.4s; }
+.animate-delay-5 { animation-delay: 0.5s; }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-banner {
+    padding: 60px 20px;
+  }
+
+  .homepage-banner h1 {
+    font-size: 28px;
+  }
+
+  .homepage-banner p {
+    font-size: 16px;
+  }
+
+  .page-container {
+    padding: 24px 16px;
+  }
+
+  .login-container {
+    margin: 32px 16px;
+    padding: 32px 24px;
+  }
+}
