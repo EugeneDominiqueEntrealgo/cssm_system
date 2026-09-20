@@ -1,37 +1,64 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+  Alert,
   Box,
-  Typography,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Button,
   Chip,
   CircularProgress,
   Container,
-  Stack,
   Divider,
+  Fab,
+  FormControl,
+  Grid,
+  InputAdornment,
+  MenuItem,
+  Paper,
+  Select,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 
 import {
-  ShoppingCart,
-  LocalOffer,
-  Storefront,
-  ArrowForward,
-  Inventory2Outlined,
-  CheckCircleRounded,
   AccessTimeRounded,
-  CancelRounded,
+  ArrowForwardRounded,
+  CheckCircleRounded,
+  EmailRounded,
+  FilterAltOffRounded,
+  Inventory2Outlined,
+  KeyboardArrowUpRounded,
+  LocalOfferRounded,
+  LocationOnRounded,
   LoginRounded,
+  PhoneRounded,
+  RefreshRounded,
+  SearchRounded,
+  SellOutlined,
   ShoppingBagOutlined,
-  VerifiedOutlined,
+  ShoppingCartRounded,
+  StorefrontRounded,
+  SupportAgentRounded,
   TrendingUpRounded,
+  VerifiedRounded,
 } from "@mui/icons-material";
 
 import API from "../../api/axios";
-import { colors } from "../../theme";
+import Navbar from "../../components/Navbar";
+
+const STORE = {
+  name: "StoreHub",
+  tagline: "Local convenience, made simpler.",
+  address: "Garcia, Batuan, Bohol",
+  phone: "+63 912 345 6789",
+  email: "contact@storehub.ph",
+  openingHour: 7,
+  closingHour: 21,
+};
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -42,34 +69,83 @@ const Homepage = () => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState("featured");
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  const fetchHomepageData = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      // Existing API kept exactly as-is.
+      const response = await API.get("/public/homepage");
+
+      setData({
+        products: response.data?.products || [],
+        promos: response.data?.promos || [],
+      });
+    } catch (err) {
+      console.error("Failed to fetch homepage data:", err);
+      setError(
+        "We could not load the latest store data. Please check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await API.get("/public/homepage");
-
-        setData({
-          products: response.data?.products || [],
-          promos: response.data?.promos || [],
-        });
-      } catch (error) {
-        console.error("Failed to fetch homepage data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchHomepageData();
   }, []);
 
-  const getStockStatus = (stock) => {
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 520);
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const formatPrice = (price) =>
+    `₱${Number(price || 0).toLocaleString("en-PH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const formatDate = (date) =>
+    date
+      ? new Date(date).toLocaleDateString("en-PH", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+
+  const getStockStatus = (stockValue) => {
+    const stock = Number(stockValue || 0);
+
     if (stock <= 0) {
       return {
         label: "Out of Stock",
         color: "#B91C1C",
-        background: "#FEF2F2",
+        bg: "#FEF2F2",
         border: "#FECACA",
-        icon: <CancelRounded sx={{ fontSize: 14 }} />,
       };
     }
 
@@ -77,108 +153,181 @@ const Homepage = () => {
       return {
         label: `Only ${stock} left`,
         color: "#B45309",
-        background: "#FFFBEB",
+        bg: "#FFFBEB",
         border: "#FDE68A",
-        icon: <AccessTimeRounded sx={{ fontSize: 14 }} />,
       };
     }
 
     return {
       label: "In Stock",
       color: "#047857",
-      background: "#ECFDF5",
+      bg: "#ECFDF5",
       border: "#A7F3D0",
-      icon: <CheckCircleRounded sx={{ fontSize: 14 }} />,
     };
   };
 
-  const formatPrice = (price) => {
-    return `₱${Number(price || 0).toLocaleString("en-PH", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
+  const categories = useMemo(() => {
+    const values = data.products
+      .map((product) => product.category)
+      .filter(Boolean);
 
-  const formatDate = (date) => {
-    if (!date) return "";
+    return ["All", ...new Set(values)];
+  }, [data.products]);
 
-    return new Date(date).toLocaleDateString("en-PH", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+  const filteredProducts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    const result = data.products.filter((product) => {
+      const matchesCategory =
+        activeCategory === "All" || product.category === activeCategory;
+
+      const matchesSearch =
+        !query ||
+        product.name?.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.category?.toLowerCase().includes(query);
+
+      return matchesCategory && matchesSearch;
     });
-  };
 
-  const scrollToProducts = () => {
-    document.getElementById("products-section")?.scrollIntoView({
-      behavior: "smooth",
+    return [...result].sort((a, b) => {
+      if (sortOrder === "price-low") {
+        return Number(a.price || 0) - Number(b.price || 0);
+      }
+
+      if (sortOrder === "price-high") {
+        return Number(b.price || 0) - Number(a.price || 0);
+      }
+
+      if (sortOrder === "name") {
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      }
+
+      if (sortOrder === "stock") {
+        return Number(b.stock || 0) - Number(a.stock || 0);
+      }
+
+      return 0;
     });
-  };
+  }, [data.products, search, activeCategory, sortOrder]);
+
+  const featuredProducts = useMemo(
+    () =>
+      [...data.products]
+        .filter((product) => Number(product.stock || 0) > 0)
+        .sort((a, b) => Number(b.stock || 0) - Number(a.stock || 0))
+        .slice(0, 4),
+    [data.products]
+  );
+
+  const availableProducts = useMemo(
+    () =>
+      data.products.filter((product) => Number(product.stock || 0) > 0).length,
+    [data.products]
+  );
+
+  const activePromos = useMemo(() => {
+    const today = new Date();
+
+    return data.promos.filter((promo) => {
+      if (!promo.end_date) return true;
+      const endDate = new Date(promo.end_date);
+      endDate.setHours(23, 59, 59, 999);
+      return endDate >= today;
+    });
+  }, [data.promos]);
+
+  const isOpen =
+    now.getHours() >= STORE.openingHour &&
+    now.getHours() < STORE.closingHour;
+
+  const storeStatusText = isOpen
+    ? "Open now · closes at 9:00 PM"
+    : now.getHours() < STORE.openingHour
+    ? "Closed · opens at 7:00 AM"
+    : "Closed · opens tomorrow at 7:00 AM";
 
   if (loading) {
     return (
       <Box
         sx={{
-          minHeight: "72vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "#F8FAFC",
+          minHeight: "100vh",
+          bgcolor: "#F7FAF9",
+          pt: { xs: 9, sm: 10 },
         }}
       >
-        <Stack spacing={2} alignItems="center">
-          <Box
-            sx={{
-              width: 68,
-              height: 68,
-              display: "grid",
-              placeItems: "center",
-              borderRadius: "20px",
-              bgcolor: "#FFFFFF",
-              border: "1px solid #E2E8F0",
-              boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-              position: "relative",
-            }}
-          >
-            <Storefront
-              sx={{
-                fontSize: 29,
-                color: "#0F766E",
-              }}
-            />
+        <Navbar homepage />
+        <Box
+          sx={{
+            py: { xs: 7, md: 10 },
+            background:
+              "linear-gradient(135deg, #062E2A 0%, #0C4F47 55%, #0E6D60 100%)",
+          }}
+        >
+          <Container maxWidth="lg">
+            <Grid container spacing={4} alignItems="center">
+              <Grid item xs={12} md={7}>
+                <Skeleton
+                  variant="rounded"
+                  width={180}
+                  height={28}
+                  sx={{ bgcolor: "rgba(255,255,255,.12)", mb: 2 }}
+                />
+                <Skeleton
+                  variant="text"
+                  width="92%"
+                  height={78}
+                  sx={{ bgcolor: "rgba(255,255,255,.12)" }}
+                />
+                <Skeleton
+                  variant="text"
+                  width="68%"
+                  height={42}
+                  sx={{ bgcolor: "rgba(255,255,255,.10)" }}
+                />
+                <Stack direction="row" spacing={1.5} sx={{ mt: 3 }}>
+                  <Skeleton
+                    variant="rounded"
+                    width={160}
+                    height={48}
+                    sx={{ bgcolor: "rgba(255,255,255,.12)" }}
+                  />
+                  <Skeleton
+                    variant="rounded"
+                    width={140}
+                    height={48}
+                    sx={{ bgcolor: "rgba(255,255,255,.10)" }}
+                  />
+                </Stack>
+              </Grid>
 
-            <CircularProgress
-              size={68}
-              thickness={2.5}
-              sx={{
-                color: colors.primary,
-                position: "absolute",
-              }}
-            />
-          </Box>
+              <Grid item xs={12} md={5}>
+                <Skeleton
+                  variant="rounded"
+                  height={320}
+                  sx={{
+                    bgcolor: "rgba(255,255,255,.10)",
+                    borderRadius: "28px",
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
 
-          <Box textAlign="center">
-            <Typography
-              sx={{
-                color: "#0F172A",
-                fontSize: "0.95rem",
-                fontWeight: 700,
-              }}
-            >
-              StoreHub
-            </Typography>
-
-            <Typography
-              sx={{
-                mt: 0.35,
-                color: "#64748B",
-                fontSize: "0.8rem",
-              }}
-            >
-              Preparing the store for you...
-            </Typography>
-          </Box>
-        </Stack>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Grid container spacing={2.5}>
+            {[1, 2, 3, 4].map((item) => (
+              <Grid item xs={12} sm={6} md={3} key={item}>
+                <Skeleton
+                  variant="rounded"
+                  height={340}
+                  sx={{ borderRadius: "20px" }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
       </Box>
     );
   }
@@ -187,45 +336,99 @@ const Homepage = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        bgcolor: "#F8FAFC",
-        color: "#0F172A",
+        bgcolor: "#F7FAF9",
+        color: "#10201D",
+        overflowX: "hidden",
+        pt: { xs: 9, sm: 10 },
       }}
     >
-      {/* =====================================================
-          HERO
-      ===================================================== */}
+      <Navbar homepage />
 
+      {/* =========================================================
+          ANNOUNCEMENT BAR
+          No route dependency.
+      ========================================================= */}
       <Box
+        sx={{
+          bgcolor: "#073D37",
+          color: "white",
+          borderBottom: "1px solid rgba(255,255,255,.08)",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={{ xs: 0.4, sm: 2 }}
+            sx={{ py: 1.05 }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <AccessTimeRounded sx={{ fontSize: 16, color: "#99F6E4" }} />
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>
+                {storeStatusText}
+              </Typography>
+            </Stack>
+
+            <Typography
+              sx={{
+                fontSize: "0.72rem",
+                color: "rgba(255,255,255,.66)",
+              }}
+            >
+              Everyday essentials · Updated availability · Local service
+            </Typography>
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* =========================================================
+          ERROR BANNER
+      ========================================================= */}
+      {error && (
+        <Container maxWidth="lg" sx={{ pt: 2 }}>
+          <Alert
+            severity="warning"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<RefreshRounded />}
+                onClick={fetchHomepageData}
+              >
+                Retry
+              </Button>
+            }
+            sx={{ borderRadius: "14px" }}
+          >
+            {error}
+          </Alert>
+        </Container>
+      )}
+
+      {/* =========================================================
+          HERO
+      ========================================================= */}
+      <Box
+        id="home-section"
         sx={{
           position: "relative",
           overflow: "hidden",
-          color: "#FFFFFF",
-
-          pt: {
-            xs: 7,
-            sm: 8,
-            md: 10,
-          },
-
-          pb: {
-            xs: 8,
-            sm: 9,
-            md: 11,
-          },
-
           background:
-            "linear-gradient(135deg, #0B2924 0%, #0F4C42 55%, #126B5D 100%)",
+            "linear-gradient(135deg, #062E2A 0%, #0B4B43 55%, #0E6D60 100%)",
+          color: "white",
+          py: { xs: 7, sm: 8, md: 10 },
         }}
       >
         <Box
           sx={{
             position: "absolute",
-            width: 460,
-            height: 460,
+            width: 420,
+            height: 420,
             borderRadius: "50%",
-            bgcolor: "rgba(94, 234, 212, 0.06)",
-            top: -250,
-            right: -120,
+            bgcolor: "rgba(153,246,228,.06)",
+            top: -210,
+            right: -110,
           }}
         />
 
@@ -235,8 +438,8 @@ const Homepage = () => {
             width: 260,
             height: 260,
             borderRadius: "50%",
-            bgcolor: "rgba(255, 255, 255, 0.035)",
-            bottom: -170,
+            bgcolor: "rgba(255,255,255,.04)",
+            bottom: -140,
             left: -100,
           }}
         />
@@ -244,384 +447,287 @@ const Homepage = () => {
         <Container maxWidth="lg">
           <Grid
             container
-            spacing={{
-              xs: 5,
-              md: 7,
-            }}
+            spacing={{ xs: 5, md: 7 }}
             alignItems="center"
-            sx={{
-              position: "relative",
-              zIndex: 1,
-            }}
+            sx={{ position: "relative", zIndex: 1 }}
           >
             <Grid item xs={12} md={7}>
-              <Box
+              <Chip
+                icon={
+                  <StorefrontRounded
+                    sx={{ fontSize: "16px !important", color: "#5EEAD4" }}
+                  />
+                }
+                label="Your neighborhood convenience store"
                 sx={{
-                  maxWidth: 700,
+                  mb: 2.2,
+                  color: "rgba(255,255,255,.86)",
+                  bgcolor: "rgba(255,255,255,.07)",
+                  border: "1px solid rgba(255,255,255,.10)",
+                  "& .MuiChip-label": {
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                  },
+                }}
+              />
+
+              <Typography
+                component="h1"
+                sx={{
+                  maxWidth: 760,
+                  fontSize: {
+                    xs: "2.15rem",
+                    sm: "3rem",
+                    md: "4rem",
+                  },
+                  fontWeight: 900,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.055em",
                 }}
               >
+                Everyday essentials,
                 <Box
+                  component="span"
                   sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.9,
-
-                    px: 1.5,
-                    py: 0.7,
-
-                    mb: 2.8,
-
-                    borderRadius: 999,
-
-                    bgcolor: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    display: "block",
+                    mt: 0.4,
+                    color: "#99F6E4",
                   }}
                 >
-                  <Storefront
-                    sx={{
-                      fontSize: 16,
-                      color: "#5EEAD4",
-                    }}
-                  />
-
-                  <Typography
-                    sx={{
-                      fontSize: "0.78rem",
-                      fontWeight: 600,
-                      color: "rgba(255,255,255,0.82)",
-                    }}
-                  >
-                    Your trusted neighborhood store
-                  </Typography>
+                  always within reach.
                 </Box>
+              </Typography>
 
-                <Typography
-                  component="h1"
+              <Typography
+                sx={{
+                  mt: 2.2,
+                  maxWidth: 620,
+                  color: "rgba(255,255,255,.68)",
+                  fontSize: { xs: "0.9rem", md: "1rem" },
+                  lineHeight: 1.75,
+                }}
+              >
+                Check product availability, browse current promotions, and
+                discover everyday essentials from your local StoreHub in one
+                simple place.
+              </Typography>
+
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.4}
+                sx={{ mt: 3.4 }}
+              >
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<ShoppingBagOutlined />}
+                  onClick={() => scrollTo("products-section")}
                   sx={{
-                    maxWidth: 680,
-
-                    fontSize: {
-                      xs: "2.45rem",
-                      sm: "3.25rem",
-                      md: "4rem",
-                    },
-
+                    minHeight: 50,
+                    px: 3,
+                    borderRadius: "14px",
+                    bgcolor: "#5EEAD4",
+                    color: "#082F2A",
+                    textTransform: "none",
                     fontWeight: 800,
-                    lineHeight: 1.05,
-                    letterSpacing: "-0.045em",
+                    boxShadow: "none",
+                    "&:hover": {
+                      bgcolor: "#99F6E4",
+                      boxShadow: "none",
+                    },
                   }}
                 >
-                  Everyday essentials,
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "block",
-                      mt: 0.35,
-                      color: "#99F6E4",
-                    }}
-                  >
-                    made convenient.
-                  </Box>
-                </Typography>
+                  Browse Products
+                </Button>
 
-                <Typography
+                <Button
+                  variant="outlined"
+                  size="large"
+                  endIcon={<ArrowForwardRounded />}
+                  onClick={() => scrollTo("promos-section")}
                   sx={{
-                    mt: 2.6,
-
-                    maxWidth: 590,
-
-                    fontSize: {
-                      xs: "0.95rem",
-                      md: "1.05rem",
+                    minHeight: 50,
+                    px: 3,
+                    borderRadius: "14px",
+                    borderColor: "rgba(255,255,255,.22)",
+                    color: "white",
+                    textTransform: "none",
+                    fontWeight: 700,
+                    "&:hover": {
+                      borderColor: "rgba(255,255,255,.55)",
+                      bgcolor: "rgba(255,255,255,.05)",
                     },
-
-                    lineHeight: 1.75,
-
-                    color: "rgba(255,255,255,0.7)",
                   }}
                 >
-                  Discover available products, current promotions, and updated
-                  stock from your local convenience store.
-                </Typography>
+                  View Promotions
+                </Button>
+              </Stack>
 
-                <Stack
-                  direction={{
-                    xs: "column",
-                    sm: "row",
-                  }}
-                  spacing={1.5}
-                  sx={{
-                    mt: 3.5,
-                  }}
-                >
-                  <Button
-                    size="large"
-                    variant="contained"
-                    startIcon={<LoginRounded />}
-                    endIcon={<ArrowForward />}
-                    onClick={() => navigate("/login")}
-                    sx={{
-                      minHeight: 50,
-                      px: 3,
-
-                      borderRadius: "13px",
-
-                      textTransform: "none",
-
-                      bgcolor: "#5EEAD4",
-                      color: "#0F3D36",
-
-                      fontSize: "0.88rem",
-                      fontWeight: 800,
-
-                      boxShadow: "0 10px 28px rgba(45, 212, 191, 0.16)",
-
-                      transition: "all .2s ease",
-
-                      "&:hover": {
-                        bgcolor: "#99F6E4",
-                        transform: "translateY(-1px)",
-                        boxShadow: "0 13px 30px rgba(45, 212, 191, 0.2)",
-                      },
-                    }}
+              <Stack
+                direction="row"
+                spacing={{ xs: 1.5, sm: 3 }}
+                sx={{
+                  mt: 3.3,
+                  flexWrap: "wrap",
+                  rowGap: 1.2,
+                }}
+              >
+                {[
+                  [<VerifiedRounded />, "Reliable products"],
+                  [<TrendingUpRounded />, "Updated stock"],
+                  [<SupportAgentRounded />, "Local support"],
+                ].map(([icon, label]) => (
+                  <Stack
+                    key={label}
+                    direction="row"
+                    spacing={0.7}
+                    alignItems="center"
                   >
-                    Login to your account
-                  </Button>
-
-                  <Button
-                    size="large"
-                    variant="outlined"
-                    startIcon={<ShoppingBagOutlined />}
-                    onClick={scrollToProducts}
-                    sx={{
-                      minHeight: 50,
-                      px: 3,
-
-                      borderRadius: "13px",
-
-                      color: "#FFFFFF",
-
-                      borderColor: "rgba(255,255,255,0.22)",
-
-                      bgcolor: "rgba(255,255,255,0.035)",
-
-                      textTransform: "none",
-
-                      fontSize: "0.88rem",
-                      fontWeight: 650,
-
-                      "&:hover": {
-                        borderColor: "rgba(255,255,255,0.45)",
-                        bgcolor: "rgba(255,255,255,0.07)",
-                      },
-                    }}
-                  >
-                    Browse Products
-                  </Button>
-                </Stack>
-
-                <Stack
-                  direction={{
-                    xs: "column",
-                    sm: "row",
-                  }}
-                  spacing={{
-                    xs: 1.1,
-                    sm: 2.4,
-                  }}
-                  sx={{
-                    mt: 3.8,
-                  }}
-                >
-                  {[
-                    {
-                      icon: <VerifiedOutlined />,
-                      text: "Reliable products",
-                    },
-                    {
-                      icon: <TrendingUpRounded />,
-                      text: "Updated stock",
-                    },
-                    {
-                      icon: <LocalOffer />,
-                      text: "Exclusive promos",
-                    },
-                  ].map((item) => (
                     <Box
-                      key={item.text}
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        gap: 0.7,
+                        color: "#5EEAD4",
+                        "& svg": { fontSize: 16 },
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          color: "#5EEAD4",
-
-                          "& svg": {
-                            fontSize: 17,
-                          },
-                        }}
-                      >
-                        {item.icon}
-                      </Box>
-
-                      <Typography
-                        sx={{
-                          fontSize: "0.78rem",
-                          color: "rgba(255,255,255,0.67)",
-                        }}
-                      >
-                        {item.text}
-                      </Typography>
+                      {icon}
                     </Box>
-                  ))}
-                </Stack>
-              </Box>
+                    <Typography
+                      sx={{
+                        color: "rgba(255,255,255,.58)",
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
             </Grid>
 
-            {/* HERO CARD */}
-
             <Grid item xs={12} md={5}>
-              <Box
+              <Paper
+                elevation={0}
                 sx={{
-                  maxWidth: 410,
-                  mx: "auto",
-
-                  p: {
-                    xs: 1.3,
-                    sm: 1.6,
-                  },
-
+                  p: { xs: 1.4, sm: 1.8 },
                   borderRadius: "28px",
-
-                  bgcolor: "rgba(255,255,255,0.07)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-
-                  boxShadow: "0 25px 60px rgba(0,0,0,0.13)",
+                  bgcolor: "rgba(255,255,255,.08)",
+                  border: "1px solid rgba(255,255,255,.10)",
+                  backdropFilter: "blur(16px)",
                 }}
               >
                 <Box
                   sx={{
-                    p: {
-                      xs: 2.5,
-                      sm: 3,
-                    },
-
-                    bgcolor: "#FFFFFF",
-                    color: "#0F172A",
-
+                    p: { xs: 2.2, sm: 2.6 },
                     borderRadius: "22px",
+                    bgcolor: "#FFFFFF",
+                    color: "#10201D",
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.3,
-                    }}
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    spacing={2}
                   >
-                    <Box
+                    <Stack direction="row" spacing={1.3} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 46,
+                          height: 46,
+                          display: "grid",
+                          placeItems: "center",
+                          borderRadius: "15px",
+                          bgcolor: "#ECFDF5",
+                          border: "1px solid #D1FAE5",
+                        }}
+                      >
+                        <StorefrontRounded
+                          sx={{ color: "#0F766E", fontSize: 24 }}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Typography
+                          sx={{ fontSize: "1rem", fontWeight: 900 }}
+                        >
+                          {STORE.name}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            color: "#94A3B8",
+                            fontSize: "0.68rem",
+                          }}
+                        >
+                          Garcia, Batuan, Bohol
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    <Chip
+                      size="small"
+                      icon={
+                        <CheckCircleRounded
+                          sx={{
+                            fontSize: "14px !important",
+                            color: isOpen
+                              ? "#047857 !important"
+                              : "#B91C1C !important",
+                          }}
+                        />
+                      }
+                      label={isOpen ? "OPEN" : "CLOSED"}
                       sx={{
-                        width: 54,
-                        height: 54,
-
-                        display: "grid",
-                        placeItems: "center",
-
-                        borderRadius: "16px",
-
-                        bgcolor: "#ECFDF5",
-                        border: "1px solid #D1FAE5",
+                        height: 26,
+                        bgcolor: isOpen ? "#ECFDF5" : "#FEF2F2",
+                        color: isOpen ? "#047857" : "#B91C1C",
+                        fontWeight: 900,
+                        fontSize: "0.62rem",
                       }}
-                    >
-                      <Storefront
-                        sx={{
-                          color: "#0F766E",
-                          fontSize: 28,
-                        }}
-                      />
-                    </Box>
+                    />
+                  </Stack>
 
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: "1.05rem",
-                          fontWeight: 800,
-                        }}
-                      >
-                        StoreHub
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 0.2,
-                          color: "#94A3B8",
-                          fontSize: "0.72rem",
-                        }}
-                      >
-                        Sari-Sari Store System
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <Divider sx={{ my: 2.2, borderColor: "#EEF2F6" }} />
 
                   <Typography
                     sx={{
-                      mt: 2.2,
-
                       color: "#64748B",
-
-                      fontSize: "0.85rem",
+                      fontSize: "0.78rem",
                       lineHeight: 1.65,
                     }}
                   >
-                    Products, promotions, and store updates available in one
-                    convenient place.
+                    A quick look at what is currently available in the store.
                   </Typography>
 
-                  <Divider
-                    sx={{
-                      my: 2.4,
-                      borderColor: "#F1F5F9",
-                    }}
-                  />
-
-                  <Grid container spacing={1.4}>
+                  <Grid container spacing={1.3} sx={{ mt: 0.5 }}>
                     <Grid item xs={6}>
                       <Box
                         sx={{
-                          p: 2,
-
-                          borderRadius: "16px",
-
+                          p: 1.6,
                           bgcolor: "#F0FDFA",
                           border: "1px solid #CCFBF1",
+                          borderRadius: "15px",
                         }}
                       >
                         <Typography
                           sx={{
+                            fontSize: "0.6rem",
                             color: "#0F766E",
-                            fontSize: "0.65rem",
-                            fontWeight: 750,
-                            letterSpacing: "0.05em",
+                            fontWeight: 800,
+                            letterSpacing: ".06em",
                           }}
                         >
-                          PRODUCTS
+                          AVAILABLE
                         </Typography>
-
                         <Typography
                           sx={{
-                            mt: 0.3,
-
+                            mt: 0.2,
                             fontSize: "1.45rem",
-                            fontWeight: 800,
-
-                            color: "#0F172A",
+                            fontWeight: 900,
                           }}
                         >
-                          {data.products.length}
+                          {availableProducts}
                         </Typography>
                       </Box>
                     </Grid>
@@ -629,184 +735,495 @@ const Homepage = () => {
                     <Grid item xs={6}>
                       <Box
                         sx={{
-                          p: 2,
-
-                          borderRadius: "16px",
-
+                          p: 1.6,
                           bgcolor: "#FFF7ED",
                           border: "1px solid #FFEDD5",
+                          borderRadius: "15px",
                         }}
                       >
                         <Typography
                           sx={{
+                            fontSize: "0.6rem",
                             color: "#C2410C",
-                            fontSize: "0.65rem",
-                            fontWeight: 750,
-                            letterSpacing: "0.05em",
+                            fontWeight: 800,
+                            letterSpacing: ".06em",
                           }}
                         >
-                          PROMOS
+                          ACTIVE PROMOS
                         </Typography>
-
                         <Typography
                           sx={{
-                            mt: 0.3,
-
+                            mt: 0.2,
                             fontSize: "1.45rem",
-                            fontWeight: 800,
-
-                            color: "#0F172A",
+                            fontWeight: 900,
                           }}
                         >
-                          {data.promos.length}
+                          {activePromos.length}
                         </Typography>
                       </Box>
                     </Grid>
                   </Grid>
+
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="flex-start"
+                    sx={{
+                      mt: 1.5,
+                      p: 1.5,
+                      borderRadius: "14px",
+                      bgcolor: "#F8FAFC",
+                    }}
+                  >
+                    <LocationOnRounded
+                      sx={{ mt: 0.1, fontSize: 18, color: "#0F766E" }}
+                    />
+                    <Box>
+                      <Typography
+                        sx={{ fontSize: "0.72rem", fontWeight: 800 }}
+                      >
+                        Visit the store
+                      </Typography>
+                      <Typography
+                        sx={{
+                          mt: 0.2,
+                          color: "#64748B",
+                          fontSize: "0.68rem",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Open daily from 7:00 AM to 9:00 PM.
+                      </Typography>
+                    </Box>
+                  </Stack>
                 </Box>
-              </Box>
+              </Paper>
             </Grid>
           </Grid>
         </Container>
       </Box>
 
-      {/* =====================================================
-          PROMOTIONS
-      ===================================================== */}
-
-      {data.promos.length > 0 && (
-        <Box
-          sx={{
-            py: {
-              xs: 7,
-              md: 9,
-            },
-
-            bgcolor: "#FFFFFF",
-          }}
-        >
-          <Container maxWidth="lg">
-            <Box
-              sx={{
-                mb: 4,
-                maxWidth: 620,
-              }}
-            >
-              <Chip
-                icon={<LocalOffer />}
-                label="Special Offers"
-                sx={{
-                  mb: 1.4,
-
-                  bgcolor: "#FFF7ED",
-                  color: "#C2410C",
-
-                  border: "1px solid #FFEDD5",
-
-                  fontSize: "0.72rem",
-                  fontWeight: 700,
-                }}
-              />
-
-              <Typography
-                component="h2"
-                sx={{
-                  fontSize: {
-                    xs: "1.8rem",
-                    md: "2.25rem",
-                  },
-
-                  fontWeight: 800,
-
-                  letterSpacing: "-0.035em",
-
-                  color: "#0F172A",
-                }}
-              >
-                Current Promos & Offers
-              </Typography>
-
-              <Typography
-                sx={{
-                  mt: 1,
-
-                  color: "#64748B",
-
-                  fontSize: "0.92rem",
-                  lineHeight: 1.7,
-
-                  maxWidth: 540,
-                }}
-              >
-                Save more with our latest deals and exclusive in-store
-                promotions.
-              </Typography>
-            </Box>
-
-            <Grid container spacing={2.5}>
-              {data.promos.map((promo) => (
-                <Grid item xs={12} sm={6} md={4} key={promo.id}>
-                  <Card
+      {/* =========================================================
+          TRUST / STAT BAR
+      ========================================================= */}
+      <Box
+        sx={{
+          bgcolor: "#FFFFFF",
+          borderBottom: "1px solid #E8EFED",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container>
+            {[
+              {
+                icon: <Inventory2Outlined />,
+                value: data.products.length,
+                label: "Products listed",
+              },
+              {
+                icon: <CheckCircleRounded />,
+                value: availableProducts,
+                label: "Available now",
+              },
+              {
+                icon: <LocalOfferRounded />,
+                value: activePromos.length,
+                label: "Active promos",
+              },
+              {
+                icon: <AccessTimeRounded />,
+                value: "7 Days",
+                label: "Open weekly",
+              },
+            ].map((item, index) => (
+              <Grid item xs={6} md={3} key={item.label}>
+                <Stack
+                  direction="row"
+                  spacing={1.3}
+                  alignItems="center"
+                  sx={{
+                    py: { xs: 2.2, md: 2.7 },
+                    px: { xs: 0.7, sm: 2 },
+                    borderRight:
+                      index !== 3
+                        ? { md: "1px solid #E8EFED" }
+                        : "none",
+                  }}
+                >
+                  <Box
                     sx={{
-                      height: "100%",
-
-                      borderRadius: "18px",
-
-                      border: "1px solid #EEF2F6",
-
-                      bgcolor: "#FFFFFF",
-
-                      boxShadow: "0 6px 24px rgba(15,23,42,0.04)",
-
-                      transition: "all .22s ease",
-
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        borderColor: "#FED7AA",
-                        boxShadow: "0 14px 34px rgba(15,23,42,0.07)",
-                      },
+                      width: 40,
+                      height: 40,
+                      flexShrink: 0,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: "13px",
+                      bgcolor: "#F0FDFA",
+                      color: "#0F766E",
+                      "& svg": { fontSize: 20 },
                     }}
                   >
-                    <CardContent
-                      sx={{
-                        p: 2.8,
+                    {item.icon}
+                  </Box>
 
-                        "&:last-child": {
-                          pb: 2.8,
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 900,
+                        fontSize: { xs: "0.95rem", md: "1.1rem" },
+                      }}
+                    >
+                      {item.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "#82908D",
+                        fontSize: "0.65rem",
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* =========================================================
+          FEATURED PRODUCTS
+      ========================================================= */}
+      {featuredProducts.length > 0 && (
+        <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: "#F7FAF9" }}>
+          <Container maxWidth="lg">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", sm: "flex-end" }}
+              spacing={2}
+              sx={{ mb: 3.5 }}
+            >
+              <Box>
+                <Typography
+                  sx={{
+                    color: "#0F766E",
+                    fontSize: "0.68rem",
+                    fontWeight: 900,
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Popular right now
+                </Typography>
+                <Typography
+                  component="h2"
+                  sx={{
+                    mt: 0.8,
+                    fontSize: { xs: "1.7rem", md: "2.2rem" },
+                    fontWeight: 900,
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  Featured products
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.8,
+                    color: "#72807D",
+                    fontSize: "0.84rem",
+                  }}
+                >
+                  A quick look at selected products currently available.
+                </Typography>
+              </Box>
+
+              <Button
+                endIcon={<ArrowForwardRounded />}
+                onClick={() => scrollTo("products-section")}
+                sx={{
+                  color: "#0F766E",
+                  textTransform: "none",
+                  fontWeight: 800,
+                }}
+              >
+                Browse all products
+              </Button>
+            </Stack>
+
+            <Grid container spacing={2.3}>
+              {featuredProducts.map((product) => {
+                const stock = getStockStatus(product.stock);
+
+                return (
+                  <Grid item xs={12} sm={6} md={3} key={product.id}>
+                    <Card
+                      sx={{
+                        height: "100%",
+                        overflow: "hidden",
+                        borderRadius: "20px",
+                        bgcolor: "#FFFFFF",
+                        border: "1px solid #E7EEEC",
+                        boxShadow: "0 8px 24px rgba(15,23,42,.035)",
+                        transition:
+                          "transform .25s ease, box-shadow .25s ease",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow:
+                            "0 18px 38px rgba(15,23,42,.08)",
                         },
                       }}
                     >
                       <Box
                         sx={{
-                          width: 46,
-                          height: 46,
-
-                          display: "grid",
-                          placeItems: "center",
-
-                          mb: 2,
-
-                          borderRadius: "14px",
-
-                          bgcolor: "#FFF7ED",
-                          border: "1px solid #FFEDD5",
+                          position: "relative",
+                          height: 180,
+                          bgcolor: "#EEF4F2",
+                          overflow: "hidden",
                         }}
                       >
-                        <LocalOffer
+                        {product.image_url ? (
+                          <Box
+                            component="img"
+                            src={product.image_url}
+                            alt={product.name}
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              objectPosition: "center 38%",
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              height: "100%",
+                              display: "grid",
+                              placeItems: "center",
+                            }}
+                          >
+                            <ShoppingBagOutlined
+                              sx={{ fontSize: 42, color: "#A7B5B2" }}
+                            />
+                          </Box>
+                        )}
+
+                        <Chip
+                          label={product.category || "General"}
+                          size="small"
                           sx={{
-                            color: "#EA580C",
-                            fontSize: 21,
+                            position: "absolute",
+                            top: 12,
+                            left: 12,
+                            bgcolor: "rgba(255,255,255,.94)",
+                            fontWeight: 800,
+                            fontSize: "0.6rem",
                           }}
                         />
                       </Box>
 
+                      <CardContent sx={{ p: 2.2 }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 900,
+                            fontSize: "0.88rem",
+                            lineHeight: 1.35,
+                            minHeight: 38,
+                          }}
+                        >
+                          {product.name}
+                        </Typography>
+
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-end"
+                          spacing={1}
+                          sx={{ mt: 1.8 }}
+                        >
+                          <Box>
+                            <Typography
+                              sx={{
+                                color: "#94A3B8",
+                                fontSize: "0.58rem",
+                                fontWeight: 700,
+                              }}
+                            >
+                              PRICE
+                            </Typography>
+                            <Typography
+                              sx={{
+                                color: "#047857",
+                                fontSize: "1.1rem",
+                                fontWeight: 900,
+                              }}
+                            >
+                              {formatPrice(product.price)}
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              px: 1,
+                              py: 0.55,
+                              borderRadius: 999,
+                              bgcolor: stock.bg,
+                              color: stock.color,
+                              border: `1px solid ${stock.border}`,
+                              fontSize: "0.58rem",
+                              fontWeight: 800,
+                            }}
+                          >
+                            {stock.label}
+                          </Box>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Container>
+        </Box>
+      )}
+
+      {/* =========================================================
+          PROMOTIONS
+      ========================================================= */}
+      <Box
+        id="promos-section"
+        sx={{
+          scrollMarginTop: 90,
+          py: { xs: 6, md: 8 },
+          bgcolor: "#FFFFFF",
+          borderTop: "1px solid #EEF2F1",
+          borderBottom: "1px solid #EEF2F1",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ mb: 3.7 }}>
+            <Chip
+              icon={
+                <LocalOfferRounded
+                  sx={{ fontSize: "15px !important", color: "#C2410C" }}
+                />
+              }
+              label="Current offers"
+              sx={{
+                bgcolor: "#FFF7ED",
+                color: "#C2410C",
+                fontWeight: 800,
+                fontSize: "0.65rem",
+                border: "1px solid #FFEDD5",
+              }}
+            />
+
+            <Typography
+              component="h2"
+              sx={{
+                mt: 1.2,
+                fontSize: { xs: "1.7rem", md: "2.2rem" },
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+              }}
+            >
+              Promotions worth checking
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 0.7,
+                maxWidth: 560,
+                color: "#72807D",
+                fontSize: "0.84rem",
+                lineHeight: 1.65,
+              }}
+            >
+              See the latest store offers without leaving the homepage.
+            </Typography>
+          </Box>
+
+          {activePromos.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 4 },
+                borderRadius: "20px",
+                border: "1px dashed #CBD5D1",
+                bgcolor: "#FBFCFC",
+                textAlign: "center",
+              }}
+            >
+              <LocalOfferRounded sx={{ fontSize: 36, color: "#A7B5B2" }} />
+              <Typography sx={{ mt: 1, fontWeight: 900 }}>
+                No active promotions right now
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.5,
+                  color: "#81908D",
+                  fontSize: "0.78rem",
+                }}
+              >
+                Check again later for new store offers.
+              </Typography>
+            </Paper>
+          ) : (
+            <Grid container spacing={2.4}>
+              {activePromos.slice(0, 3).map((promo) => (
+                <Grid item xs={12} md={4} key={promo.id}>
+                  <Card
+                    sx={{
+                      height: "100%",
+                      borderRadius: "20px",
+                      border: "1px solid #F1E8E1",
+                      boxShadow: "0 8px 26px rgba(15,23,42,.035)",
+                    }}
+                  >
+                    <CardContent sx={{ p: 2.6 }}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        spacing={2}
+                      >
+                        <Box
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            display: "grid",
+                            placeItems: "center",
+                            borderRadius: "14px",
+                            bgcolor: "#FFF7ED",
+                            color: "#EA580C",
+                          }}
+                        >
+                          <LocalOfferRounded sx={{ fontSize: 21 }} />
+                        </Box>
+
+                        <Chip
+                          size="small"
+                          label={
+                            promo.discount_type === "percentage"
+                              ? `${promo.discount_value}% OFF`
+                              : promo.discount_type === "fixed"
+                              ? `₱${promo.discount_value} OFF`
+                              : "SPECIAL DEAL"
+                          }
+                          sx={{
+                            bgcolor: "#F59E0B",
+                            color: "#FFFFFF",
+                            fontWeight: 900,
+                            fontSize: "0.6rem",
+                          }}
+                        />
+                      </Stack>
+
                       <Typography
                         sx={{
-                          color: "#0F172A",
-
+                          mt: 2,
+                          fontWeight: 900,
                           fontSize: "1rem",
-                          fontWeight: 800,
-
                           lineHeight: 1.35,
                         }}
                       >
@@ -816,387 +1233,393 @@ const Homepage = () => {
                       <Typography
                         sx={{
                           mt: 0.8,
-
-                          color: "#64748B",
-
-                          fontSize: "0.82rem",
+                          color: "#72807D",
+                          fontSize: "0.76rem",
                           lineHeight: 1.65,
-
-                          minHeight: 43,
+                          minHeight: 50,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
                         }}
                       >
-                        {promo.description}
+                        {promo.description ||
+                          "Enjoy this current StoreHub promotion while it is available."}
                       </Typography>
 
-                      <Divider
+                      <Divider sx={{ my: 2, borderColor: "#F2F4F3" }} />
+
+                      <Typography
                         sx={{
-                          my: 2.2,
-                          borderColor: "#F1F5F9",
-                        }}
-                      />
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-
-                          gap: 1.2,
-
-                          flexWrap: "wrap",
+                          color: "#94A3B8",
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
                         }}
                       >
-                        <Typography
-                          sx={{
-                            color: "#94A3B8",
-
-                            fontSize: "0.68rem",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {formatDate(promo.start_date)} –{" "}
-                          {formatDate(promo.end_date)}
-                        </Typography>
-
-                        <Chip
-                          size="small"
-                          label={
-                            promo.discount_type === "percentage"
-                              ? `${promo.discount_value}% OFF`
-                              : promo.discount_type === "fixed"
-                                ? `₱${promo.discount_value} OFF`
-                                : "Bundle Deal"
-                          }
-                          sx={{
-                            height: 28,
-
-                            bgcolor: "#F59E0B",
-                            color: "#FFFFFF",
-
-                            fontSize: "0.67rem",
-                            fontWeight: 800,
-                          }}
-                        />
-                      </Box>
+                        {formatDate(promo.start_date)}
+                        {promo.end_date
+                          ? ` – ${formatDate(promo.end_date)}`
+                          : ""}
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
               ))}
             </Grid>
-          </Container>
-        </Box>
-      )}
+          )}
+        </Container>
+      </Box>
 
-      {/* =====================================================
-          PRODUCTS
-      ===================================================== */}
-
+      {/* =========================================================
+          PRODUCT CATALOG
+      ========================================================= */}
       <Box
         id="products-section"
         sx={{
-          py: {
-            xs: 7,
-            md: 9,
-          },
-
-          bgcolor: "#F8FAFC",
+          scrollMarginTop: 90,
+          py: { xs: 6, md: 8 },
+          bgcolor: "#F7FAF9",
         }}
       >
         <Container maxWidth="lg">
-          <Box
-            sx={{
-              mb: 4,
-              maxWidth: 620,
-            }}
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", md: "flex-end" }}
+            spacing={2}
+            sx={{ mb: 3.2 }}
           >
-            <Chip
-              icon={<ShoppingCart />}
-              label="Product Catalog"
-              sx={{
-                mb: 1.4,
-
-                bgcolor: "#ECFDF5",
-                color: "#047857",
-
-                border: "1px solid #D1FAE5",
-
-                fontSize: "0.72rem",
-                fontWeight: 700,
-              }}
-            />
-
-            <Typography
-              component="h2"
-              sx={{
-                color: "#0F172A",
-
-                fontSize: {
-                  xs: "1.8rem",
-                  md: "2.25rem",
-                },
-
-                fontWeight: 800,
-
-                letterSpacing: "-0.035em",
-              }}
-            >
-              Explore Our Products
-            </Typography>
-
-            <Typography
-              sx={{
-                mt: 1,
-
-                color: "#64748B",
-
-                fontSize: "0.92rem",
-                lineHeight: 1.7,
-              }}
-            >
-              Browse available convenience-store essentials and their current
-              stock status.
-            </Typography>
-          </Box>
-
-          {data.products.length === 0 ? (
-            <Box
-              sx={{
-                py: 7,
-                px: 3,
-
-                textAlign: "center",
-
-                bgcolor: "#FFFFFF",
-
-                border: "1px dashed #CBD5E1",
-
-                borderRadius: "20px",
-              }}
-            >
-              <Box
+            <Box>
+              <Typography
                 sx={{
-                  width: 76,
-                  height: 76,
-
-                  display: "grid",
-                  placeItems: "center",
-
-                  mx: "auto",
-
-                  borderRadius: "20px",
-
-                  bgcolor: "#F8FAFC",
+                  color: "#0F766E",
+                  fontSize: "0.68rem",
+                  fontWeight: 900,
+                  letterSpacing: ".12em",
+                  textTransform: "uppercase",
                 }}
               >
-                <Inventory2Outlined
-                  sx={{
-                    fontSize: 38,
-                    color: "#94A3B8",
-                  }}
-                />
-              </Box>
+                Product catalog
+              </Typography>
+
+              <Typography
+                component="h2"
+                sx={{
+                  mt: 0.8,
+                  fontSize: { xs: "1.7rem", md: "2.2rem" },
+                  fontWeight: 900,
+                  letterSpacing: "-0.04em",
+                }}
+              >
+                Find what you need
+              </Typography>
 
               <Typography
                 sx={{
-                  mt: 1.8,
-
-                  color: "#0F172A",
-
-                  fontSize: "1rem",
-                  fontWeight: 750,
+                  mt: 0.7,
+                  color: "#72807D",
+                  fontSize: "0.84rem",
                 }}
               >
-                No products available
+                Search products and check their latest available stock.
               </Typography>
+            </Box>
 
+            <Typography
+              sx={{
+                px: 1.3,
+                py: 0.7,
+                borderRadius: 999,
+                bgcolor: "#FFFFFF",
+                border: "1px solid #E3EBE8",
+                color: "#64748B",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+              }}
+            >
+              {filteredProducts.length} result
+              {filteredProducts.length !== 1 ? "s" : ""}
+            </Typography>
+          </Stack>
+
+          {/* Search + sort */}
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2.4,
+              p: { xs: 1.5, sm: 1.8 },
+              borderRadius: "18px",
+              bgcolor: "#FFFFFF",
+              border: "1px solid #E4ECE9",
+            }}
+          >
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={1.3}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search product name, category, or description..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRounded sx={{ color: "#82908D" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "13px",
+                    bgcolor: "#FAFCFB",
+                  },
+                }}
+              />
+
+              <FormControl
+                size="small"
+                sx={{
+                  minWidth: { xs: "100%", md: 190 },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "13px",
+                    bgcolor: "#FAFCFB",
+                  },
+                }}
+              >
+                <Select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <MenuItem value="featured">Featured</MenuItem>
+                  <MenuItem value="price-low">Price: Low to High</MenuItem>
+                  <MenuItem value="price-high">Price: High to Low</MenuItem>
+                  <MenuItem value="name">Name: A–Z</MenuItem>
+                  <MenuItem value="stock">Most Stock</MenuItem>
+                </Select>
+              </FormControl>
+
+              {(search || activeCategory !== "All") && (
+                <Button
+                  startIcon={<FilterAltOffRounded />}
+                  onClick={() => {
+                    setSearch("");
+                    setActiveCategory("All");
+                  }}
+                  sx={{
+                    whiteSpace: "nowrap",
+                    borderRadius: "13px",
+                    color: "#64748B",
+                    textTransform: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                mt: 1.5,
+                pb: 0.2,
+                overflowX: "auto",
+                "&::-webkit-scrollbar": { height: 4 },
+              }}
+            >
+              {categories.map((category) => {
+                const selected = activeCategory === category;
+
+                return (
+                  <Chip
+                    key={category}
+                    label={category}
+                    clickable
+                    onClick={() => setActiveCategory(category)}
+                    sx={{
+                      flexShrink: 0,
+                      bgcolor: selected ? "#0F766E" : "#F6F9F8",
+                      color: selected ? "#FFFFFF" : "#52615E",
+                      border: selected
+                        ? "1px solid #0F766E"
+                        : "1px solid #E3EBE8",
+                      fontWeight: 800,
+                      fontSize: "0.66rem",
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+          </Paper>
+
+          {filteredProducts.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                py: 6,
+                px: 3,
+                borderRadius: "20px",
+                bgcolor: "#FFFFFF",
+                border: "1px dashed #CBD5D1",
+                textAlign: "center",
+              }}
+            >
+              <SearchRounded sx={{ fontSize: 38, color: "#A7B5B2" }} />
+              <Typography sx={{ mt: 1.2, fontWeight: 900 }}>
+                No products found
+              </Typography>
               <Typography
                 sx={{
                   mt: 0.5,
-
-                  color: "#94A3B8",
-
-                  fontSize: "0.8rem",
+                  color: "#81908D",
+                  fontSize: "0.76rem",
                 }}
               >
-                Please check again later for new items.
+                Try another search or category.
               </Typography>
-            </Box>
+
+              <Button
+                onClick={() => {
+                  setSearch("");
+                  setActiveCategory("All");
+                }}
+                sx={{
+                  mt: 2,
+                  color: "#0F766E",
+                  textTransform: "none",
+                  fontWeight: 800,
+                }}
+              >
+                Show all products
+              </Button>
+            </Paper>
           ) : (
-            <Grid container spacing={2.5}>
-              {data.products.map((product) => {
+            <Grid container spacing={2.4}>
+              {filteredProducts.map((product) => {
                 const stock = getStockStatus(product.stock);
 
                 return (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    lg={3}
+                    key={product.id}
+                  >
                     <Card
                       sx={{
                         height: "100%",
-
+                        display: "flex",
+                        flexDirection: "column",
                         overflow: "hidden",
-
-                        borderRadius: "18px",
-
+                        borderRadius: "20px",
                         bgcolor: "#FFFFFF",
-
-                        border: "1px solid #E8EEEC",
-
-                        boxShadow: "0 6px 24px rgba(15,23,42,0.04)",
-
-                        transition: "all .24s ease",
-
+                        border: "1px solid #E5ECEA",
+                        boxShadow: "0 6px 22px rgba(15,23,42,.035)",
+                        transition:
+                          "transform .25s ease, box-shadow .25s ease",
                         "&:hover": {
                           transform: "translateY(-5px)",
-                          borderColor: "#CCFBF1",
-                          boxShadow: "0 15px 38px rgba(15,23,42,0.08)",
-                        },
-
-                        "&:hover .product-image": {
-                          transform: "scale(1.035)",
+                          boxShadow:
+                            "0 18px 38px rgba(15,23,42,.08)",
                         },
                       }}
                     >
-                      {/* PRODUCT IMAGE */}
-
                       <Box
                         sx={{
                           position: "relative",
-
-                          height: 210,
-
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-
+                          height: 190,
+                          bgcolor: "#EEF4F2",
                           overflow: "hidden",
-
-                          bgcolor: "#EDF4F2",
                         }}
                       >
                         {product.image_url ? (
                           <Box
-                            className="product-image"
                             component="img"
                             src={product.image_url}
                             alt={product.name}
+                            loading="lazy"
                             sx={{
                               width: "100%",
                               height: "100%",
-
                               objectFit: "cover",
-
                               transition: "transform .35s ease",
+                              "&:hover": {
+                                transform: "scale(1.035)",
+                              },
                             }}
                           />
                         ) : (
                           <Box
                             sx={{
-                              width: 78,
-                              height: 78,
-
+                              height: "100%",
                               display: "grid",
                               placeItems: "center",
-
-                              borderRadius: "20px",
-
-                              bgcolor: "rgba(255,255,255,0.65)",
                             }}
                           >
                             <ShoppingBagOutlined
-                              sx={{
-                                fontSize: 39,
-                                color: "#86AFA4",
-                              }}
+                              sx={{ fontSize: 44, color: "#A7B5B2" }}
                             />
                           </Box>
                         )}
 
                         <Chip
                           size="small"
-                          label={product.category}
+                          label={product.category || "General"}
                           sx={{
                             position: "absolute",
-
                             top: 12,
                             left: 12,
-
-                            height: 28,
-
                             maxWidth: "65%",
-
-                            bgcolor: "rgba(255,255,255,0.92)",
-
-                            color: "#334155",
-
-                            fontSize: "0.66rem",
-                            fontWeight: 700,
-
-                            border: "1px solid rgba(255,255,255,0.7)",
-
-                            boxShadow: "0 3px 10px rgba(15,23,42,0.07)",
+                            bgcolor: "rgba(255,255,255,.94)",
+                            color: "#42514E",
+                            fontWeight: 800,
+                            fontSize: "0.6rem",
                           }}
                         />
 
                         <Box
                           sx={{
                             position: "absolute",
-
                             right: 12,
                             bottom: 12,
-
-                            display: "flex",
-                            alignItems: "center",
-
-                            gap: 0.45,
-
-                            px: 1.05,
-                            py: 0.58,
-
+                            px: 1,
+                            py: 0.55,
                             borderRadius: 999,
-
-                            bgcolor: stock.background,
-
+                            bgcolor: stock.bg,
                             color: stock.color,
-
                             border: `1px solid ${stock.border}`,
-
-                            fontSize: "0.65rem",
-
-                            fontWeight: 700,
+                            fontSize: "0.58rem",
+                            fontWeight: 900,
                           }}
                         >
-                          {stock.icon}
                           {stock.label}
                         </Box>
                       </Box>
 
-                      {/* PRODUCT DETAILS */}
-
                       <CardContent
                         sx={{
-                          p: 2.3,
-
-                          "&:last-child": {
-                            pb: 2.3,
-                          },
+                          p: 2.2,
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          "&:last-child": { pb: 2.2 },
                         }}
                       >
                         <Typography
                           sx={{
-                            color: "#0F172A",
-
-                            fontSize: "0.98rem",
-                            fontWeight: 750,
-
+                            fontSize: "0.9rem",
+                            fontWeight: 900,
                             lineHeight: 1.35,
-
                             display: "-webkit-box",
-
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
-
                             overflow: "hidden",
-
-                            minHeight: 42,
+                            minHeight: 40,
                           }}
                         >
                           {product.name}
@@ -1204,65 +1627,47 @@ const Homepage = () => {
 
                         <Typography
                           sx={{
-                            mt: 0.65,
-
-                            color: "#64748B",
-
-                            fontSize: "0.78rem",
+                            mt: 0.7,
+                            color: "#72807D",
+                            fontSize: "0.72rem",
                             lineHeight: 1.6,
-
                             display: "-webkit-box",
-
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
-
                             overflow: "hidden",
-
-                            minHeight: 40,
+                            minHeight: 36,
+                            flex: 1,
                           }}
                         >
                           {product.description ||
-                            "Quality everyday essential available at StoreHub."}
+                            "Everyday essential currently listed at StoreHub."}
                         </Typography>
 
                         <Divider
-                          sx={{
-                            my: 1.8,
-                            borderColor: "#F1F5F9",
-                          }}
+                          sx={{ my: 1.7, borderColor: "#EEF2F1" }}
                         />
 
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-
-                            gap: 1,
-                          }}
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-end"
+                          spacing={1}
                         >
                           <Box>
                             <Typography
                               sx={{
                                 color: "#94A3B8",
-
-                                fontSize: "0.64rem",
-                                fontWeight: 600,
+                                fontSize: "0.58rem",
+                                fontWeight: 700,
                               }}
                             >
-                              Price
+                              PRICE
                             </Typography>
-
                             <Typography
                               sx={{
-                                mt: 0.15,
-
                                 color: "#047857",
-
-                                fontSize: "1.25rem",
-                                fontWeight: 800,
-
-                                lineHeight: 1.2,
+                                fontSize: "1.12rem",
+                                fontWeight: 900,
                               }}
                             >
                               {formatPrice(product.price)}
@@ -1271,27 +1676,24 @@ const Homepage = () => {
 
                           <Box
                             sx={{
-                              width: 40,
-                              height: 40,
-
-                              display: "grid",
-                              placeItems: "center",
-
-                              borderRadius: "12px",
-
-                              bgcolor: "#ECFDF5",
-
-                              border: "1px solid #D1FAE5",
+                              px: 1.1,
+                              py: 0.65,
+                              bgcolor: "#F0FDFA",
+                              border: "1px solid #CCFBF1",
+                              borderRadius: "11px",
                             }}
                           >
-                            <ShoppingCart
+                            <Typography
                               sx={{
-                                color: "#059669",
-                                fontSize: 19,
+                                color: "#0F766E",
+                                fontSize: "0.62rem",
+                                fontWeight: 900,
                               }}
-                            />
+                            >
+                              {Number(product.stock || 0)} in stock
+                            </Typography>
                           </Box>
-                        </Box>
+                        </Stack>
                       </CardContent>
                     </Card>
                   </Grid>
@@ -1302,147 +1704,735 @@ const Homepage = () => {
         </Container>
       </Box>
 
-      {/* =====================================================
-          FINAL CTA
-      ===================================================== */}
-
+      {/* =========================================================
+          WHY STOREHUB
+      ========================================================= */}
       <Box
+        id="about-section"
         sx={{
-          py: {
-            xs: 7,
-            md: 8,
-          },
-
+          scrollMarginTop: 90,
+          py: { xs: 6, md: 8 },
           bgcolor: "#FFFFFF",
+          borderTop: "1px solid #EEF2F1",
         }}
       >
         <Container maxWidth="lg">
-          <Box
-            sx={{
-              position: "relative",
-
-              overflow: "hidden",
-
-              px: {
-                xs: 3,
-                sm: 4,
-                md: 6,
-              },
-
-              py: {
-                xs: 4.5,
-                md: 5.5,
-              },
-
-              borderRadius: {
-                xs: "22px",
-                md: "26px",
-              },
-
-              color: "#FFFFFF",
-
-              background: "linear-gradient(125deg, #0B2924 0%, #0F5B4E 100%)",
-
-              boxShadow: "0 18px 45px rgba(15,91,78,0.13)",
-            }}
-          >
-            <Box
+          <Box sx={{ textAlign: "center", maxWidth: 620, mx: "auto" }}>
+            <Typography
               sx={{
-                position: "absolute",
-
-                width: 250,
-                height: 250,
-
-                borderRadius: "50%",
-
-                right: -110,
-                top: -160,
-
-                bgcolor: "rgba(94,234,212,0.07)",
-              }}
-            />
-
-            <Grid
-              container
-              spacing={3}
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{
-                position: "relative",
-                zIndex: 1,
+                color: "#0F766E",
+                fontSize: "0.68rem",
+                fontWeight: 900,
+                letterSpacing: ".12em",
+                textTransform: "uppercase",
               }}
             >
-              <Grid item xs={12} md={8}>
+              Why StoreHub
+            </Typography>
+
+            <Typography
+              component="h2"
+              sx={{
+                mt: 0.9,
+                fontSize: { xs: "1.7rem", md: "2.2rem" },
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+              }}
+            >
+              Built around everyday convenience
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 1,
+                color: "#72807D",
+                fontSize: "0.84rem",
+                lineHeight: 1.7,
+              }}
+            >
+              Simple information, updated availability, and easier access to
+              the products and promotions you need.
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2.3} sx={{ mt: 2.5 }}>
+            {[
+              {
+                icon: <TrendingUpRounded />,
+                title: "Updated availability",
+                text: "Check current product stock before visiting the store.",
+              },
+              {
+                icon: <SellOutlined />,
+                title: "Current promotions",
+                text: "See available offers and discounts in one place.",
+              },
+              {
+                icon: <StorefrontRounded />,
+                title: "Local convenience",
+                text: "Designed around the everyday needs of the neighborhood.",
+              },
+              {
+                icon: <SupportAgentRounded />,
+                title: "Easy store contact",
+                text: "Reach the store quickly through phone or email.",
+              },
+            ].map((item) => (
+              <Grid item xs={12} sm={6} md={3} key={item.title}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    height: "100%",
+                    p: 2.5,
+                    borderRadius: "18px",
+                    border: "1px solid #E5ECEA",
+                    bgcolor: "#FBFCFC",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: "14px",
+                      bgcolor: "#ECFDF5",
+                      color: "#0F766E",
+                      "& svg": { fontSize: 21 },
+                    }}
+                  >
+                    {item.icon}
+                  </Box>
+
+                  <Typography
+                    sx={{
+                      mt: 1.6,
+                      fontWeight: 900,
+                      fontSize: "0.88rem",
+                    }}
+                  >
+                    {item.title}
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      mt: 0.6,
+                      color: "#72807D",
+                      fontSize: "0.74rem",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    {item.text}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* =========================================================
+          STORE INFO / CONTACT
+      ========================================================= */}
+      <Box
+        id="contact-section"
+        sx={{
+          scrollMarginTop: 90,
+          py: { xs: 6, md: 8 },
+          bgcolor: "#F7FAF9",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={7}>
+              <Paper
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  p: { xs: 2.6, sm: 3.2 },
+                  borderRadius: "22px",
+                  border: "1px solid #E3EBE8",
+                  bgcolor: "#FFFFFF",
+                }}
+              >
                 <Typography
                   sx={{
-                    fontSize: {
-                      xs: "1.7rem",
-                      md: "2.2rem",
-                    },
+                    color: "#0F766E",
+                    fontSize: "0.68rem",
+                    fontWeight: 900,
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Visit us
+                </Typography>
 
-                    fontWeight: 800,
-
-                    lineHeight: 1.2,
-
+                <Typography
+                  sx={{
+                    mt: 0.9,
+                    fontSize: { xs: "1.45rem", md: "1.8rem" },
+                    fontWeight: 900,
                     letterSpacing: "-0.035em",
                   }}
                 >
-                  Already have a StoreHub account?
+                  Your local StoreHub
                 </Typography>
 
                 <Typography
                   sx={{
-                    mt: 1,
-
-                    maxWidth: 620,
-
-                    color: "rgba(255,255,255,0.68)",
-
-                    fontSize: "0.88rem",
+                    mt: 0.8,
+                    maxWidth: 560,
+                    color: "#72807D",
+                    fontSize: "0.8rem",
                     lineHeight: 1.7,
                   }}
                 >
-                  Login using your Account ID or registered email to access your
-                  dashboard, orders, receipts, and account information.
+                  Drop by for everyday essentials, current store promotions,
+                  and updated product availability.
                 </Typography>
-              </Grid>
 
-              <Grid item xs={12} md="auto">
+                <Grid container spacing={1.6} sx={{ mt: 1.4 }}>
+                  <Grid item xs={12} sm={6}>
+                    <Box
+                      sx={{
+                        p: 1.8,
+                        borderRadius: "15px",
+                        bgcolor: "#F8FBFA",
+                        border: "1px solid #E7EEEC",
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.2}>
+                        <LocationOnRounded sx={{ color: "#0F766E" }} />
+                        <Box>
+                          <Typography
+                            sx={{
+                              fontSize: "0.7rem",
+                              fontWeight: 900,
+                            }}
+                          >
+                            Address
+                          </Typography>
+                          <Typography
+                            sx={{
+                              mt: 0.3,
+                              color: "#72807D",
+                              fontSize: "0.72rem",
+                            }}
+                          >
+                            {STORE.address}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box
+                      sx={{
+                        p: 1.8,
+                        borderRadius: "15px",
+                        bgcolor: "#F8FBFA",
+                        border: "1px solid #E7EEEC",
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.2}>
+                        <AccessTimeRounded sx={{ color: "#0F766E" }} />
+                        <Box>
+                          <Typography
+                            sx={{
+                              fontSize: "0.7rem",
+                              fontWeight: 900,
+                            }}
+                          >
+                            Store hours
+                          </Typography>
+                          <Typography
+                            sx={{
+                              mt: 0.3,
+                              color: "#72807D",
+                              fontSize: "0.72rem",
+                            }}
+                          >
+                            Daily · 7:00 AM–9:00 PM
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} md={5}>
+              <Paper
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  p: { xs: 2.6, sm: 3.2 },
+                  borderRadius: "22px",
+                  bgcolor: "#0A3F39",
+                  color: "#FFFFFF",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#99F6E4",
+                    fontSize: "0.68rem",
+                    fontWeight: 900,
+                    letterSpacing: ".12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Contact
+                </Typography>
+
+                <Typography
+                  sx={{
+                    mt: 0.9,
+                    fontSize: "1.35rem",
+                    fontWeight: 900,
+                  }}
+                >
+                  Need to ask about an item?
+                </Typography>
+
+                <Typography
+                  sx={{
+                    mt: 0.8,
+                    color: "rgba(255,255,255,.64)",
+                    fontSize: "0.78rem",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  Contact the store for product availability, new arrivals, or
+                  current promotions.
+                </Typography>
+
+                <Stack spacing={1.2} sx={{ mt: 2.2 }}>
+                  <Button
+                    component="a"
+                    href={`tel:${STORE.phone.replace(/\s+/g, "")}`}
+                    startIcon={<PhoneRounded />}
+                    sx={{
+                      justifyContent: "flex-start",
+                      color: "#FFFFFF",
+                      bgcolor: "rgba(255,255,255,.06)",
+                      border: "1px solid rgba(255,255,255,.08)",
+                      borderRadius: "13px",
+                      px: 1.6,
+                      py: 1.1,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,.10)",
+                      },
+                    }}
+                  >
+                    {STORE.phone}
+                  </Button>
+
+                  <Button
+                    component="a"
+                    href={`mailto:${STORE.email}`}
+                    startIcon={<EmailRounded />}
+                    sx={{
+                      justifyContent: "flex-start",
+                      color: "#FFFFFF",
+                      bgcolor: "rgba(255,255,255,.06)",
+                      border: "1px solid rgba(255,255,255,.08)",
+                      borderRadius: "13px",
+                      px: 1.6,
+                      py: 1.1,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,.10)",
+                      },
+                    }}
+                  >
+                    {STORE.email}
+                  </Button>
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* =========================================================
+          FINAL CTA
+      ========================================================= */}
+      <Box sx={{ py: { xs: 5, md: 6 }, bgcolor: "#FFFFFF" }}>
+        <Container maxWidth="lg">
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              color: "#FFFFFF",
+              background:
+                "linear-gradient(135deg, #0A3F39 0%, #0F766E 100%)",
+              overflow: "hidden",
+            }}
+          >
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
+              spacing={2.5}
+            >
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: { xs: "1.35rem", md: "1.65rem" },
+                    fontWeight: 900,
+                  }}
+                >
+                  Ready to explore the store?
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.6,
+                    color: "rgba(255,255,255,.65)",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  Browse available products or sign in using the existing
+                  StoreHub login page.
+                </Typography>
+              </Box>
+
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.2}
+                sx={{ width: { xs: "100%", md: "auto" } }}
+              >
                 <Button
                   variant="contained"
-                  size="large"
-                  endIcon={<ArrowForward />}
-                  onClick={() => navigate("/login")}
+                  startIcon={<ShoppingCartRounded />}
+                  onClick={() => scrollTo("products-section")}
                   sx={{
-                    minHeight: 48,
-
-                    px: 3,
-
+                    minHeight: 46,
+                    px: 2.4,
                     borderRadius: "13px",
-
-                    bgcolor: "#FFFFFF",
-                    color: "#0F766E",
-
+                    bgcolor: "#5EEAD4",
+                    color: "#073D37",
                     textTransform: "none",
-
-                    fontSize: "0.86rem",
-                    fontWeight: 800,
-
+                    fontWeight: 900,
                     boxShadow: "none",
-
                     "&:hover": {
-                      bgcolor: "#F0FDFA",
+                      bgcolor: "#99F6E4",
                       boxShadow: "none",
                     },
                   }}
                 >
-                  Go to Login
+                  Browse products
                 </Button>
-              </Grid>
-            </Grid>
-          </Box>
+
+                {/* Existing route from App.jsx */}
+                <Button
+                  variant="outlined"
+                  startIcon={<LoginRounded />}
+                  onClick={() => navigate("/login")}
+                  sx={{
+                    minHeight: 46,
+                    px: 2.4,
+                    borderRadius: "13px",
+                    borderColor: "rgba(255,255,255,.22)",
+                    color: "#FFFFFF",
+                    textTransform: "none",
+                    fontWeight: 800,
+                    "&:hover": {
+                      borderColor: "rgba(255,255,255,.5)",
+                      bgcolor: "rgba(255,255,255,.05)",
+                    },
+                  }}
+                >
+                  Sign in
+                </Button>
+              </Stack>
+            </Stack>
+          </Paper>
         </Container>
       </Box>
+
+      {/* =========================================================
+          SINGLE HOMEPAGE FOOTER
+          Do not render the old global Footer in App.jsx.
+      ========================================================= */}
+      <Box
+        component="footer"
+        sx={{
+          bgcolor: "#071F1C",
+          color: "#FFFFFF",
+          pt: { xs: 5, md: 6 },
+          pb: 3,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={5}>
+              <Stack direction="row" spacing={1.2} alignItems="center">
+                <Box
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "13px",
+                    bgcolor: "rgba(94,234,212,.10)",
+                    border: "1px solid rgba(94,234,212,.14)",
+                  }}
+                >
+                  <StorefrontRounded sx={{ color: "#5EEAD4" }} />
+                </Box>
+
+                <Box>
+                  <Typography sx={{ fontWeight: 900 }}>
+                    {STORE.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "rgba(255,255,255,.42)",
+                      fontSize: "0.65rem",
+                    }}
+                  >
+                    {STORE.tagline}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Typography
+                sx={{
+                  mt: 1.8,
+                  maxWidth: 380,
+                  color: "rgba(255,255,255,.50)",
+                  fontSize: "0.75rem",
+                  lineHeight: 1.75,
+                }}
+              >
+                Your neighborhood store for everyday essentials, updated
+                product availability, and current promotions in one simple
+                place.
+              </Typography>
+            </Grid>
+
+            <Grid item xs={6} sm={4} md={2}>
+              <Typography
+                sx={{
+                  color: "#99F6E4",
+                  fontSize: "0.66rem",
+                  fontWeight: 900,
+                  letterSpacing: ".1em",
+                }}
+              >
+                EXPLORE
+              </Typography>
+
+              <Stack spacing={0.9} sx={{ mt: 1.4 }}>
+                {[
+                  ["Home", "home-section"],
+                  ["Products", "products-section"],
+                  ["Promotions", "promos-section"],
+                  ["About", "about-section"],
+                ].map(([label, id]) => (
+                  <Button
+                    key={label}
+                    onClick={() => scrollTo(id)}
+                    sx={{
+                      justifyContent: "flex-start",
+                      minWidth: 0,
+                      p: 0,
+                      color: "rgba(255,255,255,.50)",
+                      textTransform: "none",
+                      fontSize: "0.72rem",
+                      "&:hover": {
+                        bgcolor: "transparent",
+                        color: "#99F6E4",
+                      },
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Stack>
+            </Grid>
+
+            <Grid item xs={6} sm={4} md={2}>
+              <Typography
+                sx={{
+                  color: "#99F6E4",
+                  fontSize: "0.66rem",
+                  fontWeight: 900,
+                  letterSpacing: ".1em",
+                }}
+              >
+                CONTACT
+              </Typography>
+
+              <Stack spacing={1.05} sx={{ mt: 1.4 }}>
+                <Stack direction="row" spacing={0.8}>
+                  <LocationOnRounded
+                    sx={{
+                      mt: 0.1,
+                      fontSize: 15,
+                      color: "rgba(255,255,255,.35)",
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      color: "rgba(255,255,255,.50)",
+                      fontSize: "0.7rem",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {STORE.address}
+                  </Typography>
+                </Stack>
+
+                <Typography
+                  component="a"
+                  href={`tel:${STORE.phone.replace(/\s+/g, "")}`}
+                  sx={{
+                    color: "rgba(255,255,255,.50)",
+                    fontSize: "0.7rem",
+                    textDecoration: "none",
+                    "&:hover": { color: "#99F6E4" },
+                  }}
+                >
+                  {STORE.phone}
+                </Typography>
+
+                <Typography
+                  component="a"
+                  href={`mailto:${STORE.email}`}
+                  sx={{
+                    color: "rgba(255,255,255,.50)",
+                    fontSize: "0.7rem",
+                    textDecoration: "none",
+                    wordBreak: "break-word",
+                    "&:hover": { color: "#99F6E4" },
+                  }}
+                >
+                  {STORE.email}
+                </Typography>
+              </Stack>
+            </Grid>
+
+            <Grid item xs={12} sm={4} md={3}>
+              <Typography
+                sx={{
+                  color: "#99F6E4",
+                  fontSize: "0.66rem",
+                  fontWeight: 900,
+                  letterSpacing: ".1em",
+                }}
+              >
+                STORE STATUS
+              </Typography>
+
+              <Box
+                sx={{
+                  mt: 1.4,
+                  p: 1.5,
+                  borderRadius: "14px",
+                  bgcolor: "rgba(255,255,255,.035)",
+                  border: "1px solid rgba(255,255,255,.06)",
+                }}
+              >
+                <Stack direction="row" spacing={0.8} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: isOpen ? "#34D399" : "#F87171",
+                    }}
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: "0.7rem",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {isOpen ? "Open now" : "Currently closed"}
+                  </Typography>
+                </Stack>
+
+                <Typography
+                  sx={{
+                    mt: 0.7,
+                    color: "rgba(255,255,255,.42)",
+                    fontSize: "0.67rem",
+                    lineHeight: 1.55,
+                  }}
+                >
+                  Open daily · 7:00 AM–9:00 PM
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+
+          <Divider
+            sx={{
+              my: 3.2,
+              borderColor: "rgba(255,255,255,.07)",
+            }}
+          />
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={1}
+          >
+            <Typography
+              sx={{
+                color: "rgba(255,255,255,.32)",
+                fontSize: "0.66rem",
+              }}
+            >
+              © {new Date().getFullYear()} StoreHub. All rights reserved.
+            </Typography>
+
+            <Typography
+              sx={{
+                color: "rgba(255,255,255,.28)",
+                fontSize: "0.64rem",
+              }}
+            >
+              Built for everyday local retail.
+            </Typography>
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* BACK TO TOP */}
+      {showBackToTop && (
+        <Fab
+          size="small"
+          aria-label="Back to top"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
+          sx={{
+            position: "fixed",
+            right: { xs: 16, sm: 24 },
+            bottom: { xs: 16, sm: 24 },
+            bgcolor: "#0F766E",
+            color: "#FFFFFF",
+            boxShadow: "0 12px 30px rgba(15,118,110,.24)",
+            "&:hover": {
+              bgcolor: "#0B5F58",
+            },
+          }}
+        >
+          <KeyboardArrowUpRounded />
+        </Fab>
+      )}
     </Box>
   );
 };

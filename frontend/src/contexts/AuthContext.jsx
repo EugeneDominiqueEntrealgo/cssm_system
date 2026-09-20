@@ -7,9 +7,12 @@ export const useAuth = () => useContext(AuthContext);
 
 const normalizeUser = (userData) => {
   if (!userData) return null;
+
+  const normalizedRole = String(userData.role || '').toLowerCase();
+
   return {
     ...userData,
-    role: userData.role === 'user' ? 'client' : userData.role
+    role: normalizedRole === 'user' ? 'client' : normalizedRole
   };
 };
 
@@ -20,9 +23,17 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
+
     if (token && storedUser) {
-      setUser(normalizeUser(JSON.parse(storedUser)));
+      try {
+        setUser(normalizeUser(JSON.parse(storedUser)));
+      } catch (error) {
+        console.error('Failed to restore saved user session:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
+
     setLoading(false);
   }, []);
 

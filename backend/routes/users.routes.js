@@ -14,6 +14,7 @@ router.put('/:id/reject', authenticate, authorize('admin'), userController.rejec
 router.put('/:id/reset-password', authenticate, authorize('admin'), userController.resetPassword);
 router.post('/:id/request-password-reset', authenticate, authorize('staff'), userController.requestPasswordReset);
 router.put('/:id', authenticate, authorize('admin'), userController.update);
+router.put('/:id/deactivate', authenticate, authorize('admin'), userController.deactivate);
 router.delete('/:id', authenticate, authorize('admin'), userController.delete);
 
 module.exports = router;

@@ -120,7 +120,9 @@ class SupabaseDatabase {
 
 // Initialize databases
 const db = {
-  users: new SupabaseDatabase('users'),
+  clients: new SupabaseDatabase('clients'),
+  staff:   new SupabaseDatabase('staff'),
+  admins:  new SupabaseDatabase('admins'),
   products: new SupabaseDatabase('products'),
   promos: new SupabaseDatabase('promos'),
   transactions: new SupabaseDatabase('transactions'),
@@ -131,7 +133,12 @@ const db = {
 // Seed initial data if empty
 async function seedData() {
   try {
-    const userCount = await db.users.count();
+    const [clientCount, staffCount, adminCount] = await Promise.all([
+      db.clients.count(),
+      db.staff.count(),
+      db.admins.count()
+    ]);
+    const userCount = (clientCount || 0) + (staffCount || 0) + (adminCount || 0);
     if (userCount === 0) {
       console.log('Seeding initial data...');
       
@@ -141,32 +148,26 @@ async function seedData() {
       const staffPass = await bcrypt.hash('staff123', salt);
       const userPass = await bcrypt.hash('user123', salt);
 
-      // Create users
-      const admin = await db.users.insert({ 
-        user_id: 'U100000',
-        name: 'Admin User', 
-        email: 'admin@store.com', 
-        password: adminPass, 
-        role: 'admin', 
-        status: 'active' 
+      // Create users (separate tables)
+      const admin = await db.admins.insert({
+        name: 'Admin User',
+        email: 'admin@store.com',
+        password: adminPass,
+        status: 'active'
       });
       
-      const staff = await db.users.insert({ 
-        user_id: 'U100001',
-        name: 'Staff User', 
-        email: 'staff@store.com', 
-        password: staffPass, 
-        role: 'staff', 
-        status: 'active' 
+      const staff = await db.staff.insert({
+        name: 'Staff User',
+        email: 'staff@store.com',
+        password: staffPass,
+        status: 'active'
       });
       
-      const client = await db.users.insert({ 
-        user_id: 'U100002',
-        name: 'Juan Client', 
-        email: 'juan@email.com', 
-        password: userPass, 
-        role: 'client', 
-        status: 'active' 
+      const client = await db.clients.insert({
+        name: 'Juan Client',
+        email: 'juan@email.com',
+        password: userPass,
+        status: 'active'
       });
 
       // Create products

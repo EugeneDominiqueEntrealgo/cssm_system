@@ -2,6 +2,7 @@ const Joi = require('joi');
 const TransactionModel = require('../models/transaction.model');
 const ProductModel = require('../models/product.model');
 const SubmissionModel = require('../models/submission.model');
+const UserModel = require('../models/user.model');
 
 const transactionSchema = Joi.object({
   user_id: Joi.number().integer().allow(null),
@@ -79,6 +80,9 @@ exports.getById = async (req, res) => {
   try {
     const transaction = await TransactionModel.getById(req.params.id);
     if (!transaction) return res.status(404).json({ message: 'Transaction not found.' });
+    if (req.user.role === 'client' && Number(transaction.user_id) !== Number(req.user.id)) {
+      return res.status(403).json({ message: 'You are not allowed to view this transaction.' });
+    }
     res.json(transaction);
   } catch (error) {
     console.error('Get transaction error:', error);
@@ -155,6 +159,16 @@ exports.getPendingWalkInRequests = async (req, res) => {
   }
 };
 
+exports.getCancelledWalkInRequests = async (req, res) => {
+  try {
+    const submissions = await SubmissionModel.getByType('walk_in_order', 'cancelled');
+    res.json(submissions);
+  } catch (error) {
+    console.error('Get cancelled walk-in requests error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
 exports.completeWalkInRequest = async (req, res) => {
   try {
     const submission = await SubmissionModel.getById(req.params.id);
@@ -208,6 +222,8 @@ exports.completeWalkInRequest = async (req, res) => {
       staff_id: req.user.id,
       total_amount: totalAmount,
       payment_method: paymentMethod,
+      tendered_amount: tenderedAmount,
+      change_amount: tenderedAmount - totalAmount,
       items: transactionItems,
     });
 
@@ -222,6 +238,83 @@ exports.completeWalkInRequest = async (req, res) => {
     });
   } catch (error) {
     console.error('Complete walk-in request error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+exports.getMyWalkInRequests = async (req, res) => {
+  try {
+    const requests = await SubmissionModel.getClientWalkInRequests(req.user.id);
+    res.json(requests);
+  } catch (error) {
+    console.error('Get my walk-in requests error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+exports.cancelWalkInRequest = async (req, res) => {
+  try {
+    const submission = await SubmissionModel.getById(req.params.id);
+    if (!submission || submission.type !== 'walk_in_order') {
+      return res.status(404).json({ message: 'Walk-in order request not found.' });
+    }
+    if (Number(submission.submitted_by) !== Number(req.user.id)) {
+      return res.status(403).json({ message: 'You are not allowed to cancel this order.' });
+    }
+    if (submission.status !== 'pending') {
+      return res.status(409).json({ message: 'This order can no longer be cancelled.' });
+    }
+
+    await SubmissionModel.updateStatus(req.params.id, 'cancelled', 'Cancelled by client.');
+    res.json({ message: 'Order cancelled successfully.' });
+  } catch (error) {
+    console.error('Cancel walk-in request error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+exports.createStaffWalkInRequest = async (req, res) => {
+  try {
+    const client = await UserModel.findById(req.body.user_id);
+    if (!client || client.role !== 'client' || client.status !== 'active') {
+      return res.status(400).json({ message: 'Select an active registered client.' });
+    }
+
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    if (!items.length) {
+      return res.status(400).json({ message: 'Add at least one product to the order.' });
+    }
+
+    const itemMap = new Map();
+    for (const item of items) {
+      const productId = Number(item.product_id);
+      const quantity = Number(item.quantity);
+      if (!Number.isInteger(productId) || !Number.isInteger(quantity) || quantity < 1) {
+        return res.status(400).json({ message: 'Each product must have a valid quantity.' });
+      }
+      itemMap.set(productId, (itemMap.get(productId) || 0) + quantity);
+    }
+
+    const requestItems = [];
+    for (const [productId, quantity] of itemMap) {
+      const product = await ProductModel.getById(productId);
+      if (!product) return res.status(404).json({ message: `Product ID ${productId} not found.` });
+      if (product.status !== 'active') return res.status(400).json({ message: `Product "${product.name}" is not available.` });
+      if (Number(product.stock) < quantity) {
+        return res.status(400).json({ message: `Insufficient stock for "${product.name}". Available: ${product.stock}` });
+      }
+      requestItems.push({ product_id: product.id, quantity, name: product.name, price: product.price, image_url: product.image_url });
+    }
+
+    const submissionId = await SubmissionModel.create({
+      type: 'walk_in_order',
+      data: { items: requestItems, guided_by_staff: req.user.id },
+      submitted_by: client.id
+    });
+
+    res.status(201).json({ message: 'Pending order created for the client.', submissionId });
+  } catch (error) {
+    console.error('Create staff walk-in request error:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 };

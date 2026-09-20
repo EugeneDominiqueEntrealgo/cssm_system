@@ -5,9 +5,7 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
-  Container,
   IconButton,
   InputAdornment,
   Stack,
@@ -19,12 +17,9 @@ import {
   AlternateEmailRounded,
   ArrowBackRounded,
   ArrowForwardRounded,
-  CheckCircleRounded,
-  Inventory2Outlined,
-  LocalOfferOutlined,
+  CheckRounded,
   LockOutlined,
   SecurityRounded,
-  ShoppingCartOutlined,
   StorefrontRounded,
   Visibility,
   VisibilityOff,
@@ -39,31 +34,11 @@ const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const features = [
-    {
-      icon: <Inventory2Outlined />,
-      title: "Smart Inventory",
-      description: "Monitor products and stock levels efficiently.",
-    },
-    {
-      icon: <ShoppingCartOutlined />,
-      title: "Easy Transactions",
-      description: "Manage sales and receipts in one organized system.",
-    },
-    {
-      icon: <LocalOfferOutlined />,
-      title: "Promos & Discounts",
-      description: "Keep promotions simple, accurate and updated.",
-    },
-  ];
-
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     setError("");
 
     const cleanIdentifier = identifier.trim();
@@ -76,6 +51,7 @@ const Login = () => {
     try {
       setLoading(true);
 
+      // EXISTING AUTHENTICATION FLOW — PRESERVED
       const user = await login(cleanIdentifier, password);
 
       if (!user) {
@@ -84,7 +60,7 @@ const Login = () => {
 
       const role = String(user.role || "").toLowerCase();
 
-      // First-login temporary password flow
+      // EXISTING FIRST-LOGIN FLOW — PRESERVED
       if (user.must_change_password) {
         navigate("/change-password", {
           replace: true,
@@ -92,6 +68,7 @@ const Login = () => {
         return;
       }
 
+      // EXISTING ROLE REDIRECTS — PRESERVED
       switch (role) {
         case "admin":
           navigate("/admin/dashboard", {
@@ -129,564 +106,133 @@ const Login = () => {
     }
   };
 
+  const inputSx = {
+    "& .MuiOutlinedInput-root": {
+      minHeight: 54,
+      borderRadius: "10px",
+      bgcolor: "#FFFFFF",
+      fontSize: "0.9rem",
+      transition: "border-color .2s ease, box-shadow .2s ease",
+      "& fieldset": {
+        borderColor: "#D8E1DE",
+      },
+      "&:hover fieldset": {
+        borderColor: "#91A9A2",
+      },
+      "&.Mui-focused": {
+        boxShadow: "0 0 0 3px rgba(13, 110, 97, 0.08)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#0D6E61",
+        borderWidth: "1.5px",
+      },
+    },
+    "& input::placeholder": {
+      color: "#A1ADA9",
+      opacity: 1,
+    },
+  };
+
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-
-        background:
-          "linear-gradient(135deg, #F0FDF4 0%, #F8FAFC 50%, #FFFBEB 100%)",
-
-        py: {
-          xs: 3,
-          md: 5,
-        },
-
-        "@keyframes loginFadeUp": {
-          from: {
-            opacity: 0,
-            transform: "translateY(24px)",
-          },
-          to: {
-            opacity: 1,
-            transform: "translateY(0)",
-          },
-        },
+        bgcolor: "#EEF3F1",
+        display: "grid",
+        placeItems: "center",
+        px: { xs: 1.5, sm: 2.5 },
+        py: { xs: 1.5, sm: 2.5 },
       }}
     >
-      {/* BACKGROUND DECORATION */}
-
       <Box
         sx={{
-          position: "absolute",
-          top: -280,
-          right: -170,
-          width: 520,
-          height: 520,
-          borderRadius: "50%",
-          bgcolor: "rgba(5,150,105,.06)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: -210,
-          left: -120,
-          width: 370,
-          height: 370,
-          borderRadius: "50%",
-          bgcolor: "rgba(245,158,11,.07)",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* BACK HOME */}
-
-      <Button
-        startIcon={<ArrowBackRounded />}
-        onClick={() => navigate("/")}
-        sx={{
-          position: "absolute",
-          zIndex: 10,
-
-          top: {
-            xs: 15,
-            md: 24,
-          },
-
-          left: {
-            xs: 15,
-            md: 30,
-          },
-
-          px: 2,
-          py: 0.9,
-
-          bgcolor: "rgba(255,255,255,.78)",
-          backdropFilter: "blur(12px)",
-
-          color: "#475569",
-
-          border: "1px solid #E2E8F0",
-          borderRadius: 3,
-
-          fontSize: 13,
-          fontWeight: 700,
-          textTransform: "none",
-
-          transition: "all .25s ease",
-
-          "&:hover": {
-            bgcolor: "#FFFFFF",
-            color: "#047857",
-            transform: "translateX(-3px)",
-            boxShadow: "0 8px 25px rgba(15,23,42,.08)",
-          },
+          width: "100%",
+          maxWidth: 1080,
+          minHeight: { xs: "auto", md: 650 },
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "0.92fr 1.08fr" },
+          overflow: "hidden",
+          bgcolor: "#FFFFFF",
+          border: "1px solid #DDE6E2",
+          borderRadius: { xs: "18px", md: "22px" },
+          boxShadow:
+            "0 24px 65px rgba(28, 49, 43, 0.10), 0 3px 10px rgba(28, 49, 43, 0.04)",
         }}
       >
-        Back to Home
-      </Button>
-
-      {/* Upper-side quick links: Shop ? Services ? About Us ? Contract */}
-      <Box
-        sx={{
-          position: "absolute",
-          zIndex: 10,
-          top: { xs: 15, md: 24 },
-          right: { xs: 15, md: 30 },
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          px: 2,
-          py: 0.6,
-          borderRadius: 3,
-          bgcolor: "rgba(255,255,255,.85)",
-          border: "1px solid rgba(226,232,240,.8)",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 2px 10px rgba(15,23,42,.06)",
-        }}
-      >
-        {["Shop", "Services", "About Us", "Contract"].map((label, idx) => (
-          <React.Fragment key={label}>
-            {idx > 0 && (
-              <Box sx={{ color: "#94A3B8", fontSize: 18, lineHeight: 1 }}>?</Box>
-            )}
-            <Link
-              to="#"
-              onClick={(e) => e.preventDefault()}
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#047857",
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                letterSpacing: ".05em",
-              }}
-            >
-              {label}
-            </Link>
-          </React.Fragment>
-        ))}
-      </Box>
-
-      <Container
-        maxWidth="lg"
-        sx={{
-          position: "relative",
-          zIndex: 2,
-
-          mt: {
-            xs: 7,
-            md: 0,
-          },
-        }}
-      >
+        {/* LEFT — EDITORIAL STORE IDENTITY */}
         <Box
           sx={{
-            width: "100%",
-            maxWidth: 1060,
-
-            mx: "auto",
-
-            display: "grid",
-
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "1.08fr .92fr",
-            },
-
-            bgcolor: "#FFFFFF",
-
-            border: "1px solid rgba(226,232,240,.9)",
-
-            borderRadius: {
-              xs: 4,
-              md: 6,
-            },
-
+            display: { xs: "none", md: "flex" },
+            position: "relative",
             overflow: "hidden",
-
-            boxShadow:
-              "0 30px 80px rgba(15,23,42,.12), 0 5px 15px rgba(15,23,42,.03)",
-
-            animation: "loginFadeUp .55s ease",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            p: 5.5,
+            color: "#F7FBF9",
+            background:
+              "linear-gradient(145deg, #153C35 0%, #0E5A4F 58%, #0B6B5D 100%)",
           }}
         >
-          {/* LEFT BRAND SIDE */}
+          {/* architectural lines */}
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.08,
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px)",
+              backgroundSize: "100% 72px",
+              pointerEvents: "none",
+            }}
+          />
 
           <Box
             sx={{
-              position: "relative",
-              overflow: "hidden",
-
-              display: {
-                xs: "none",
-                md: "flex",
-              },
-
-              flexDirection: "column",
-              justifyContent: "space-between",
-
-              minHeight: 660,
-
-              p: 6,
-
-              color: "#FFFFFF",
-
-              background:
-                "linear-gradient(145deg, #022C22 0%, #064E3B 42%, #047857 75%, #059669 100%)",
+              position: "absolute",
+              width: 260,
+              height: 260,
+              border: "1px solid rgba(255,255,255,.12)",
+              borderRadius: "50%",
+              right: -110,
+              top: 120,
             }}
-          >
-            <Box
-              sx={{
-                position: "absolute",
-
-                width: 420,
-                height: 420,
-
-                top: -180,
-                right: -170,
-
-                borderRadius: "50%",
-
-                background:
-                  "radial-gradient(circle, rgba(253,230,138,.19), transparent 70%)",
-              }}
-            />
-
-            <Box
-              sx={{
-                position: "absolute",
-
-                width: 320,
-                height: 320,
-
-                bottom: -150,
-                left: -120,
-
-                borderRadius: "50%",
-
-                background:
-                  "radial-gradient(circle, rgba(167,243,208,.14), transparent 70%)",
-              }}
-            />
-
-            {/* subtle grid */}
-
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-
-                opacity: 0.035,
-
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px)",
-
-                backgroundSize: "42px 42px",
-              }}
-            />
-
-            <Box
-              sx={{
-                position: "relative",
-                zIndex: 2,
-              }}
-            >
-              {/* BRAND */}
-
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box
-                  sx={{
-                    width: 58,
-                    height: 58,
-
-                    display: "grid",
-                    placeItems: "center",
-
-                    borderRadius: 3.5,
-
-                    bgcolor: "rgba(255,255,255,.11)",
-
-                    border: "1px solid rgba(255,255,255,.15)",
-
-                    backdropFilter: "blur(10px)",
-                  }}
-                >
-                  <StorefrontRounded
-                    sx={{
-                      fontSize: 34,
-                      color: "#FDE68A",
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography
-                    sx={{
-                      fontSize: 24,
-                      fontWeight: 900,
-                      lineHeight: 1.05,
-                      letterSpacing: "-.04em",
-                    }}
-                  >
-                    StoreHub
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      mt: 0.5,
-                      color: "rgba(255,255,255,.58)",
-                      fontSize: 11.5,
-                    }}
-                  >
-                    Convenience Store Management System
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {/* MAIN TEXT */}
-
-              <Box sx={{ mt: 7 }}>
-                <Chip
-                  icon={
-                    <CheckCircleRounded
-                      sx={{
-                        color: "#A7F3D0 !important",
-                      }}
-                    />
-                  }
-                  label="Simple • Secure • Reliable"
-                  sx={{
-                    mb: 2.5,
-
-                    color: "#FFFFFF",
-
-                    bgcolor: "rgba(255,255,255,.09)",
-
-                    border: "1px solid rgba(255,255,255,.12)",
-
-                    backdropFilter: "blur(8px)",
-
-                    fontWeight: 700,
-                  }}
-                />
-
-                <Typography
-                  component="h1"
-                  sx={{
-                    maxWidth: 470,
-
-                    fontSize: "2.9rem",
-
-                    lineHeight: 1.07,
-
-                    fontWeight: 900,
-
-                    letterSpacing: "-.05em",
-                  }}
-                >
-                  Manage your store
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "block",
-                      color: "#FDE68A",
-                    }}
-                  >
-                    smarter every day.
-                  </Box>
-                </Typography>
-
-                <Typography
-                  sx={{
-                    mt: 2.5,
-
-                    maxWidth: 450,
-
-                    color: "rgba(255,255,255,.7)",
-
-                    fontSize: 15,
-
-                    lineHeight: 1.75,
-                  }}
-                >
-                  Inventory, transactions, promotions, receipts and customer
-                  records — organized through one reliable store management
-                  platform.
-                </Typography>
-              </Box>
-
-              {/* FEATURES */}
-
-              <Stack
-                spacing={2.2}
-                sx={{
-                  mt: 5,
-                }}
-              >
-                {features.map((feature) => (
-                  <Box
-                    key={feature.title}
-                    sx={{
-                      display: "flex",
-
-                      alignItems: "center",
-
-                      gap: 1.6,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 46,
-                        height: 46,
-
-                        flexShrink: 0,
-
-                        display: "grid",
-                        placeItems: "center",
-
-                        borderRadius: 2.5,
-
-                        bgcolor: "rgba(255,255,255,.09)",
-
-                        border: "1px solid rgba(255,255,255,.11)",
-
-                        color: "#FDE68A",
-                      }}
-                    >
-                      {feature.icon}
-                    </Box>
-
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: 14,
-                          fontWeight: 750,
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 0.15,
-
-                          color: "rgba(255,255,255,.55)",
-
-                          fontSize: 12,
-                        }}
-                      >
-                        {feature.description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{
-                position: "relative",
-                zIndex: 2,
-
-                color: "rgba(255,255,255,.47)",
-              }}
-            >
-              <SecurityRounded
-                sx={{
-                  fontSize: 17,
-                }}
-              />
-
-              <Typography
-                sx={{
-                  fontSize: 11.5,
-                }}
-              >
-                Secure access for Admin, Staff and Client accounts.
-              </Typography>
-            </Stack>
-          </Box>
-
-          {/* RIGHT LOGIN SIDE */}
+          />
 
           <Box
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-
-              px: {
-                xs: 3,
-                sm: 5,
-                md: 5.5,
-              },
-
-              py: {
-                xs: 4,
-                sm: 5,
-                md: 6,
-              },
+              position: "absolute",
+              width: 170,
+              height: 170,
+              border: "1px solid rgba(255,255,255,.08)",
+              borderRadius: "50%",
+              right: -65,
+              top: 165,
             }}
-          >
-            {/* MOBILE BRAND */}
+          />
 
-            <Stack
-              direction="row"
-              spacing={1.3}
-              alignItems="center"
-              sx={{
-                display: {
-                  xs: "flex",
-                  md: "none",
-                },
-
-                mb: 4,
-              }}
-            >
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            <Stack direction="row" spacing={1.25} alignItems="center">
               <Box
                 sx={{
-                  width: 50,
-                  height: 50,
-
+                  width: 42,
+                  height: 42,
                   display: "grid",
                   placeItems: "center",
-
-                  bgcolor: "#ECFDF5",
-
-                  border: "1px solid #D1FAE5",
-
-                  borderRadius: 3,
+                  borderRadius: "10px",
+                  bgcolor: "#F8D978",
+                  color: "#173C35",
                 }}
               >
-                <StorefrontRounded
-                  sx={{
-                    fontSize: 29,
-                    color: "#059669",
-                  }}
-                />
+                <StorefrontRounded sx={{ fontSize: 22 }} />
               </Box>
 
               <Box>
                 <Typography
                   sx={{
-                    color: "#0F172A",
-
-                    fontSize: 20,
-
+                    fontSize: "1.05rem",
                     fontWeight: 900,
-
-                    lineHeight: 1.1,
+                    letterSpacing: "-0.025em",
+                    lineHeight: 1.05,
                   }}
                 >
                   StoreHub
@@ -694,110 +240,303 @@ const Login = () => {
 
                 <Typography
                   sx={{
-                    mt: 0.3,
-
-                    color: "#94A3B8",
-
-                    fontSize: 11,
+                    mt: 0.28,
+                    color: "rgba(255,255,255,.57)",
+                    fontSize: "0.62rem",
+                    letterSpacing: ".06em",
+                    textTransform: "uppercase",
                   }}
                 >
-                  Store Management System
+                  Store Management Platform
                 </Typography>
               </Box>
             </Stack>
 
-            {/* FORM HEADING */}
-
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mt: 8.5, maxWidth: 390 }}>
               <Typography
                 sx={{
-                  mb: 1,
-
-                  color: "#059669",
-
-                  fontSize: 11,
-
-                  fontWeight: 800,
-
-                  textTransform: "uppercase",
-
-                  letterSpacing: ".14em",
-                }}
-              >
-                Secure Account Access
-              </Typography>
-
-              <Typography
-                sx={{
-                  color: "#0F172A",
-
-                  fontSize: {
-                    xs: "1.9rem",
-                    sm: "2.2rem",
-                  },
-
+                  color: "#F8D978",
+                  fontSize: "0.68rem",
                   fontWeight: 900,
-
-                  lineHeight: 1.15,
-
-                  letterSpacing: "-.04em",
+                  letterSpacing: ".16em",
+                  textTransform: "uppercase",
                 }}
               >
-                Welcome back
+                Access Portal
+              </Typography>
+
+              <Typography
+                component="h1"
+                sx={{
+                  mt: 1.7,
+                  fontSize: "2.75rem",
+                  lineHeight: 1.05,
+                  fontWeight: 900,
+                  letterSpacing: "-0.055em",
+                }}
+              >
+                One workspace.
+                <Box
+                  component="span"
+                  sx={{
+                    display: "block",
+                    color: "rgba(255,255,255,.72)",
+                  }}
+                >
+                  The right view for every role.
+                </Box>
               </Typography>
 
               <Typography
                 sx={{
-                  mt: 1.2,
-
-                  color: "#64748B",
-
-                  fontSize: 14,
-
-                  lineHeight: 1.65,
+                  mt: 2.2,
+                  maxWidth: 350,
+                  color: "rgba(255,255,255,.62)",
+                  fontSize: "0.82rem",
+                  lineHeight: 1.75,
                 }}
               >
-                Enter your Account ID or registered email and password to
-                continue.
+                StoreHub automatically routes each authorized account to the
+                correct workspace after sign in.
               </Typography>
             </Box>
 
-            {/* ERROR */}
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                mt: 4.5,
+                flexWrap: "wrap",
+                rowGap: 1,
+              }}
+            >
+              {["ADMIN", "STAFF", "CLIENT"].map((role) => (
+                <Box
+                  key={role}
+                  sx={{
+                    px: 1.2,
+                    py: 0.7,
+                    borderRadius: "999px",
+                    border: "1px solid rgba(255,255,255,.14)",
+                    bgcolor: "rgba(255,255,255,.06)",
+                    color: "rgba(255,255,255,.72)",
+                    fontSize: "0.61rem",
+                    fontWeight: 800,
+                    letterSpacing: ".08em",
+                  }}
+                >
+                  {role}
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 360,
+                borderTop: "1px solid rgba(255,255,255,.15)",
+                pt: 2,
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <SecurityRounded
+                  sx={{
+                    color: "#F8D978",
+                    fontSize: 17,
+                  }}
+                />
+
+                <Typography
+                  sx={{
+                    color: "rgba(255,255,255,.56)",
+                    fontSize: "0.68rem",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Secure account access with automatic role recognition.
+                </Typography>
+              </Stack>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* RIGHT — LOGIN WORKSPACE */}
+        <Box
+          sx={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "#FCFDFC",
+            px: { xs: 2.2, sm: 5, md: 7 },
+            py: { xs: 2.3, sm: 5 },
+          }}
+        >
+          <Button
+            startIcon={<ArrowBackRounded />}
+            onClick={() => navigate("/")}
+            sx={{
+              position: { xs: "static", sm: "absolute" },
+              top: 26,
+              right: 30,
+              mb: { xs: 2.2, sm: 0 },
+              color: "#5F746E",
+              textTransform: "none",
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              borderRadius: "9px",
+              px: 1,
+              "&:hover": {
+                bgcolor: "#EFF6F3",
+                color: "#0D6E61",
+              },
+            }}
+          >
+            Back to Store
+          </Button>
+
+          <Box sx={{ width: "100%", maxWidth: 420, mx: "auto" }}>
+            {/* mobile brand */}
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{
+                display: { xs: "flex", md: "none" },
+                mb: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: "9px",
+                  bgcolor: "#143F37",
+                  color: "#F8D978",
+                }}
+              >
+                <StorefrontRounded sx={{ fontSize: 20 }} />
+              </Box>
+
+              <Box>
+                <Typography
+                  sx={{
+                    color: "#173E37",
+                    fontSize: "1rem",
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  StoreHub
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.25,
+                    color: "#90A09C",
+                    fontSize: "0.58rem",
+                    textTransform: "uppercase",
+                    letterSpacing: ".08em",
+                  }}
+                >
+                  Access Portal
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.2,
+                mb: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: "8px",
+                  bgcolor: "#E7F3EF",
+                  color: "#0D6E61",
+                  fontSize: "0.65rem",
+                  fontWeight: 900,
+                }}
+              >
+                01
+              </Box>
+
+              <Typography
+                sx={{
+                  color: "#70837D",
+                  fontSize: "0.67rem",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: ".11em",
+                }}
+              >
+                Account sign in
+              </Typography>
+            </Box>
+
+            <Typography
+              sx={{
+                color: "#173E37",
+                fontSize: { xs: "1.8rem", sm: "2.15rem" },
+                fontWeight: 900,
+                lineHeight: 1.08,
+                letterSpacing: "-0.05em",
+              }}
+            >
+              Welcome back.
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 0.8,
+                mb: 3,
+                color: "#748680",
+                fontSize: "0.8rem",
+                lineHeight: 1.6,
+              }}
+            >
+              Use your Account ID or registered email to continue to StoreHub.
+            </Typography>
 
             {error && (
               <Alert
                 severity="error"
                 onClose={() => setError("")}
                 sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                  fontSize: 13,
+                  mb: 2.2,
+                  borderRadius: "10px",
+                  fontSize: "0.74rem",
+                  alignItems: "center",
+                  "& .MuiAlert-message": {
+                    py: 0.2,
+                  },
                 }}
               >
                 {error}
               </Alert>
             )}
 
-            {/* FORM */}
-
             <Box component="form" onSubmit={handleSubmit} noValidate>
-              <Stack spacing={2.3}>
-                {/* ACCOUNT ID / EMAIL */}
-
+              <Stack spacing={1.8}>
                 <Box>
                   <Typography
                     component="label"
                     htmlFor="login-identifier"
                     sx={{
                       display: "block",
-
-                      mb: 0.8,
-
-                      color: "#334155",
-
-                      fontSize: 13,
-
-                      fontWeight: 700,
+                      mb: 0.6,
+                      color: "#38564F",
+                      fontSize: "0.71rem",
+                      fontWeight: 800,
                     }}
                   >
                     Account ID or Email
@@ -810,60 +549,26 @@ const Login = () => {
                     disabled={loading}
                     autoComplete="username"
                     value={identifier}
-                    placeholder="ADM-0001 or admin@email.com"
+                    placeholder="ADM-0001 or name@email.com"
                     onChange={(event) => {
                       setIdentifier(event.target.value);
-
-                      if (error) {
-                        setError("");
-                      }
+                      if (error) setError("");
                     }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
                           <AlternateEmailRounded
                             sx={{
-                              color: "#94A3B8",
+                              color: "#8EA19B",
+                              fontSize: 19,
                             }}
                           />
                         </InputAdornment>
                       ),
                     }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        minHeight: 55,
-
-                        bgcolor: "#F8FAFC",
-
-                        borderRadius: 3,
-
-                        transition: "all .2s ease",
-
-                        "& fieldset": {
-                          borderColor: "#E2E8F0",
-                        },
-
-                        "&:hover fieldset": {
-                          borderColor: "#94A3B8",
-                        },
-
-                        "&.Mui-focused": {
-                          bgcolor: "#FFFFFF",
-
-                          boxShadow: "0 0 0 4px rgba(5,150,105,.06)",
-                        },
-
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#059669",
-
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    }}
+                    sx={inputSx}
                   />
                 </Box>
-
-                {/* PASSWORD */}
 
                 <Box>
                   <Typography
@@ -871,14 +576,10 @@ const Login = () => {
                     htmlFor="login-password"
                     sx={{
                       display: "block",
-
-                      mb: 0.8,
-
-                      color: "#334155",
-
-                      fontSize: 13,
-
-                      fontWeight: 700,
+                      mb: 0.6,
+                      color: "#38564F",
+                      fontSize: "0.71rem",
+                      fontWeight: 800,
                     }}
                   >
                     Password
@@ -894,22 +595,19 @@ const Login = () => {
                     placeholder="Enter your password"
                     onChange={(event) => {
                       setPassword(event.target.value);
-
-                      if (error) {
-                        setError("");
-                      }
+                      if (error) setError("");
                     }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
                           <LockOutlined
                             sx={{
-                              color: "#94A3B8",
+                              color: "#8EA19B",
+                              fontSize: 19,
                             }}
                           />
                         </InputAdornment>
                       ),
-
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
@@ -922,87 +620,40 @@ const Login = () => {
                             aria-label={
                               showPassword ? "Hide password" : "Show password"
                             }
+                            size="small"
+                            sx={{ color: "#71847E" }}
                           >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        minHeight: 55,
-
-                        bgcolor: "#F8FAFC",
-
-                        borderRadius: 3,
-
-                        transition: "all .2s ease",
-
-                        "& fieldset": {
-                          borderColor: "#E2E8F0",
-                        },
-
-                        "&:hover fieldset": {
-                          borderColor: "#94A3B8",
-                        },
-
-                        "&.Mui-focused": {
-                          bgcolor: "#FFFFFF",
-
-                          boxShadow: "0 0 0 4px rgba(5,150,105,.06)",
-                        },
-
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#059669",
-
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    }}
+                    sx={inputSx}
                   />
                 </Box>
-
-                {/* SUBMIT */}
 
                 <Button
                   type="submit"
                   fullWidth
-                  size="large"
                   variant="contained"
                   disabled={loading}
                   endIcon={loading ? null : <ArrowForwardRounded />}
                   sx={{
-                    minHeight: 55,
-
-                    mt: 0.6,
-
-                    bgcolor: "#047857",
-
-                    borderRadius: 3,
-
+                    minHeight: 52,
+                    mt: 0.4,
+                    borderRadius: "10px",
+                    bgcolor: "#143F37",
                     color: "#FFFFFF",
-
-                    fontSize: 15,
-
-                    fontWeight: 800,
-
+                    fontSize: "0.82rem",
+                    fontWeight: 900,
                     textTransform: "none",
-
-                    boxShadow: "0 10px 25px rgba(5,150,105,.22)",
-
-                    transition: "all .25s ease",
-
+                    boxShadow: "none",
                     "&:hover": {
-                      bgcolor: "#065F46",
-
-                      transform: "translateY(-2px)",
-
-                      boxShadow: "0 14px 32px rgba(5,150,105,.3)",
+                      bgcolor: "#0D6E61",
+                      boxShadow: "none",
                     },
-
                     "&.Mui-disabled": {
-                      bgcolor: "#9FD3C3",
-
+                      bgcolor: "#A6BDB7",
                       color: "#FFFFFF",
                     },
                   }}
@@ -1010,134 +661,95 @@ const Login = () => {
                   {loading ? (
                     <>
                       <CircularProgress
-                        size={20}
+                        size={17}
                         thickness={5}
                         sx={{
-                          mr: 1.2,
+                          mr: 1,
                           color: "#FFFFFF",
                         }}
                       />
                       Signing in...
                     </>
                   ) : (
-                    "Sign In"
+                    "Continue to StoreHub"
                   )}
                 </Button>
               </Stack>
             </Box>
 
-            {/* SECURITY INFO */}
-
             <Box
               sx={{
+                mt: 2.6,
                 display: "flex",
-
-                alignItems: "flex-start",
-
-                gap: 1.2,
-
-                mt: 3,
-
-                p: 1.8,
-
-                bgcolor: "#F0FDF4",
-
-                border: "1px solid #D1FAE5",
-
-                borderRadius: 3,
+                alignItems: "center",
+                gap: 0.8,
               }}
             >
-              <SecurityRounded
+              <CheckRounded
                 sx={{
-                  mt: 0.1,
-
-                  color: "#059669",
-
-                  fontSize: 20,
+                  fontSize: 16,
+                  color: "#0D6E61",
                 }}
               />
-
-              <Box>
-                <Typography
-                  sx={{
-                    color: "#334155",
-
-                    fontSize: 12.5,
-
-                    fontWeight: 750,
-                  }}
-                >
-                  One secure login
-                </Typography>
-
-                <Typography
-                  sx={{
-                    mt: 0.2,
-
-                    color: "#64748B",
-
-                    fontSize: 11.5,
-
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Your account role is automatically identified after successful
-                  authentication.
-                </Typography>
-              </Box>
+              <Typography
+                sx={{
+                  color: "#788B85",
+                  fontSize: "0.66rem",
+                }}
+              >
+                Your account role is identified automatically after sign in.
+              </Typography>
             </Box>
-
-            {/* REGISTER */}
 
             <Box
               sx={{
-                mt: 3.5,
-
-                pt: 3,
-
-                borderTop: "1px solid #F1F5F9",
-
-                textAlign: "center",
+                mt: 3.2,
+                pt: 2.4,
+                borderTop: "1px solid #E8EEEC",
               }}
             >
-              <Typography
-                sx={{
-                  color: "#64748B",
-
-                  fontSize: 12.5,
-                }}
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                justifyContent="space-between"
+                spacing={1.2}
               >
-                Don't have a client account?{" "}
+                <Typography
+                  sx={{
+                    color: "#7D8E89",
+                    fontSize: "0.7rem",
+                  }}
+                >
+                  Need a client account?
+                </Typography>
+
                 <Link
                   to="/register/client"
                   style={{
-                    color: "#059669",
-
-                    fontWeight: 800,
-
+                    color: "#0D6E61",
+                    fontSize: "0.7rem",
+                    fontWeight: 900,
                     textDecoration: "none",
                   }}
                 >
-                  Create account
+                  Create client account →
                 </Link>
-              </Typography>
-
-              <Typography
-                sx={{
-                  mt: 1.5,
-
-                  color: "#CBD5E1",
-
-                  fontSize: 10.5,
-                }}
-              >
-                © {new Date().getFullYear()} StoreHub • Convenience Store
-                Management System
-              </Typography>
+              </Stack>
             </Box>
+
+            <Typography
+              sx={{
+                mt: 2.6,
+                color: "#B1BCB8",
+                fontSize: "0.58rem",
+                letterSpacing: ".02em",
+              }}
+            >
+              © {new Date().getFullYear()} StoreHub · Secure account access
+            </Typography>
           </Box>
         </Box>
-      </Container>
+      </Box>
     </Box>
   );
 };

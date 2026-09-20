@@ -24,7 +24,7 @@ const ClientApprovals = () => {
 
   const handleApprove = async (id) => {
     try {
-      await API.put(`/admin/approve-staff/${id}`, { status: 'active' });
+      await API.put(`/users/${id}/approve`);
       showAlert('Client account approved!');
       fetchPending();
     } catch (error) {
@@ -34,7 +34,7 @@ const ClientApprovals = () => {
 
   const handleReject = async (id) => {
     try {
-      await API.put(`/admin/approve-staff/${id}`, { status: 'rejected' });
+      await API.put(`/users/${id}/reject`);
       showAlert('Client account rejected successfully.', 'success');
       fetchPending();
     } catch (error) {

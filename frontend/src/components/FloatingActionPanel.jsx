@@ -122,7 +122,22 @@ const FloatingActionPanel = ({
         {actions.map((action) => (
           <SpeedDialAction
             key={action.name}
-            icon={action.icon}
+            icon={action.name.startsWith('Cart') ? (
+              <Box
+                key={cartCount}
+                sx={{
+                  display: 'flex',
+                  animation: cartCount > 0 ? 'cartPulse 0.45s ease-out' : 'none',
+                  '@keyframes cartPulse': {
+                    '0%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.22)' },
+                    '100%': { transform: 'scale(1)' },
+                  },
+                }}
+              >
+                {action.icon}
+              </Box>
+            ) : action.icon}
             tooltipTitle={action.name}
             tooltipOpen
             onClick={() => {

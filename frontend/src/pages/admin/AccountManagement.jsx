@@ -34,7 +34,7 @@ import {
 
 import {
   Edit,
-  Delete,
+  Block,
   Badge,
   Person,
   AdminPanelSettings,
@@ -212,18 +212,21 @@ const AccountManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) {
+  const handleDeactivate = async (id) => {
+    if (!window.confirm("Are you sure you want to deactivate this user?")) {
       return;
     }
 
     try {
-      await API.delete(`/users/${id}`);
+      await API.put(`/users/${id}/deactivate`);
 
-      showAlert("User deleted successfully!");
+      showAlert("User deactivated successfully!");
       fetchUsers();
     } catch (error) {
-      showAlert("Failed to delete user.", "error");
+      showAlert(
+        error.response?.data?.message || "Failed to deactivate user.",
+        "error",
+      );
     }
   };
 
@@ -1041,11 +1044,12 @@ const AccountManagement = () => {
                       Edit
                     </Button>
 
-                    <Button
+                    {user.role !== "admin" && user.status === "active" && (
+                      <Button
                       size="small"
                       variant="outlined"
-                      startIcon={<Delete />}
-                      onClick={() => handleDelete(user.id)}
+                      startIcon={<Block />}
+                      onClick={() => handleDeactivate(user.id)}
                       sx={{
                         ...actionButtonSx,
 
@@ -1060,8 +1064,9 @@ const AccountManagement = () => {
                         },
                       }}
                     >
-                      Delete
-                    </Button>
+                      Deactivate
+                      </Button>
+                    )}
                   </Box>
                 </TableCell>
               </TableRow>

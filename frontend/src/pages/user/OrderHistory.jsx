@@ -1,28 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import { Receipt, PointOfSale, LocalPrintshop } from '@mui/icons-material';
+import { Alert, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Receipt, PointOfSale, LocalPrintshop, CancelOutlined } from '@mui/icons-material';
 import API from '../../api/axios';
 import { colors } from '../../theme';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
+  const [walkInRequests, setWalkInRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState({ severity: '', message: '' });
+  const [cancelRequest, setCancelRequest] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const [viewDialog, setViewDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await API.get('/transactions/my');
-        setOrders(response.data);
+        const [ordersResponse, requestsResponse] = await Promise.all([
+          API.get('/transactions/my'),
+          API.get('/transactions/walk-in-requests/my'),
+        ]);
+        setOrders(Array.isArray(ordersResponse.data) ? ordersResponse.data : []);
+        setWalkInRequests(Array.isArray(requestsResponse.data) ? requestsResponse.data : []);
       } catch (error) {
         console.error('Failed to fetch orders:', error);
+        setNotice({ severity: 'error', message: error.response?.data?.message || 'Failed to load order history.' });
       } finally {
         setLoading(false);
       }
     };
     fetchOrders();
   }, []);
+
+  const handleCancelRequest = async () => {
+    if (!cancelRequest) return;
+    setCancelling(true);
+    try {
+      await API.post(`/transactions/walk-in-requests/${cancelRequest.id}/cancel`);
+      setWalkInRequests((current) => current.map((request) => (
+        request.id === cancelRequest.id ? { ...request, status: 'cancelled' } : request
+      )));
+      setNotice({ severity: 'success', message: 'Order cancelled successfully.' });
+      setCancelRequest(null);
+    } catch (error) {
+      setNotice({ severity: 'error', message: error.response?.data?.message || 'Unable to cancel this order.' });
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleView = async (id) => {
     try {
@@ -122,7 +148,43 @@ const OrderHistory = () => {
         </Typography>
       </Box>
 
-      {orders.length === 0 ? (
+      {notice.message && (
+        <Alert severity={notice.severity} onClose={() => setNotice({ severity: '', message: '' })} sx={{ mb: 2 }}>
+          {notice.message}
+        </Alert>
+      )}
+
+      {walkInRequests.length > 0 && (
+        <Paper sx={{ mb: 3, p: 2.5, borderRadius: 3, border: '1px solid #FDE68A', bgcolor: '#FFFBEB' }}>
+          <Typography variant="h6" sx={{ color: '#92400E', fontWeight: 800, mb: 1.5 }}>
+            Walk-in Order Requests
+          </Typography>
+          {walkInRequests.map((request) => {
+            const isPending = request.status === 'pending';
+            const items = Array.isArray(request.data?.items) ? request.data.items : [];
+            return (
+              <Box key={request.id} sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2, py: 1.25, borderTop: '1px solid #FDE68A', flexDirection: { xs: 'column', sm: 'row' } }}>
+                <Box>
+                  <Typography sx={{ fontWeight: 800, color: '#0F172A' }}>Request #{request.id}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {items.length} product type(s) · {new Date(request.created_at).toLocaleString()}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Chip label={request.status} size="small" color={isPending ? 'warning' : request.status === 'cancelled' ? 'default' : 'success'} sx={{ textTransform: 'capitalize', fontWeight: 700 }} />
+                  {isPending && (
+                    <Button size="small" color="error" variant="outlined" startIcon={<CancelOutlined />} onClick={() => setCancelRequest(request)}>
+                      Cancel
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </Paper>
+      )}
+
+      {orders.length === 0 && walkInRequests.length === 0 ? (
         <Paper
           sx={{
             p: 6,
@@ -209,6 +271,12 @@ const OrderHistory = () => {
               <Typography variant="body2">Date: {new Date(selectedOrder.created_at).toLocaleString()}</Typography>
               <Typography variant="body2">Staff: {selectedOrder.staff_name}</Typography>
               <Typography variant="body2">Payment: {selectedOrder.payment_method}</Typography>
+              {selectedOrder.tendered_amount !== null && selectedOrder.tendered_amount !== undefined && (
+                <>
+                  <Typography variant="body2">Tendered: {formatPrice(selectedOrder.tendered_amount)}</Typography>
+                  <Typography variant="body2">Change: {formatPrice(selectedOrder.change_amount)}</Typography>
+                </>
+              )}
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>Items:</Typography>
                 {selectedOrder.items?.map((item, idx) => (
@@ -233,6 +301,21 @@ const OrderHistory = () => {
             Print
           </Button>
           <Button onClick={() => setViewDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={Boolean(cancelRequest)} onClose={() => !cancelling && setCancelRequest(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Cancel this order?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            This will cancel the pending walk-in request. You can no longer ask the cashier to complete it.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelRequest(null)} disabled={cancelling}>Keep Order</Button>
+          <Button color="error" variant="contained" onClick={handleCancelRequest} disabled={cancelling}>
+            {cancelling ? 'Cancelling...' : 'Cancel Order'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

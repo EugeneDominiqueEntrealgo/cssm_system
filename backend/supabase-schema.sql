@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     staff_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     total_amount DECIMAL(10, 2) NOT NULL,
     payment_method VARCHAR(20) NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'pos')),
+    tendered_amount DECIMAL(10, 2),
+    change_amount DECIMAL(10, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -88,7 +90,7 @@ CREATE TABLE IF NOT EXISTS pending_submissions (
     type VARCHAR(20) NOT NULL CHECK (type IN ('product', 'promo', 'stock_update', 'walk_in_order')),
     data JSONB NOT NULL,
     submitted_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
     admin_notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     reviewed_at TIMESTAMP WITH TIME ZONE

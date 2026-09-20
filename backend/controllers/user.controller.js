@@ -172,6 +172,22 @@ exports.update = async (req, res) => {
   }
 };
 
+exports.deactivate = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: 'Admin accounts cannot be deactivated.' });
+    }
+
+    await UserModel.updateStatus(req.params.id, 'inactive');
+    res.json({ message: 'User deactivated successfully.' });
+  } catch (error) {
+    console.error('Deactivate user error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
 exports.delete = async (req, res) => {
   try {
     await UserModel.delete(req.params.id);

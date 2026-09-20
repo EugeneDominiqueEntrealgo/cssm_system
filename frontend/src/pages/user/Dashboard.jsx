@@ -16,6 +16,7 @@ import {
   IconButton,
   Paper,
   Stack,
+  Snackbar,
   ThemeProvider,
   Tooltip,
   Typography,
@@ -67,6 +68,7 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [cartNotice, setCartNotice] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSettings, setFilterSettings] = useState({
     priceRange: [0, 10000],
@@ -299,9 +301,11 @@ const UserDashboard = () => {
     const result = addToCart(product);
     if (!result.ok) {
       setError(result.message);
-      return;
+      return result;
     }
     setError('');
+    setCartNotice({ productName: product.name });
+    return result;
   };
 
   const handleViewFavorites = () => {
@@ -363,48 +367,23 @@ const UserDashboard = () => {
 
   return (
     <ThemeProvider theme={appTheme}>
-      <Box
-        sx={{
-          minHeight: '100%',
-          bgcolor: 'background.default',
-          transition: 'background-color 0.3s ease',
-
-          p: {
-            xs: 2,
-            sm: 3,
-          },
-        }}
-      >
+      <Box className="page-container">
         {/* =====================================================
             HERO HEADER WITH DARK MODE TOGGLE
         ====================================================== */}
 
         <Paper
           elevation={0}
+          className="dashboard-hero"
           sx={{
             position: 'relative',
             overflow: 'hidden',
-
-            mb: 3,
-
-            p: {
-              xs: 3,
-              md: 4,
-            },
-
-            borderRadius: 5,
-
+            mb: 0,
             color: '#FFFFFF',
-
             background:
               isDarkMode
                 ? 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%)'
                 : 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #047857 100%)',
-
-            boxShadow:
-              '0 18px 45px rgba(6,78,59,.15)',
-
-            transition: 'all 0.3s ease',
           }}
         >
           <Box
@@ -1456,6 +1435,39 @@ const UserDashboard = () => {
             }
           }}
         />
+
+        <Snackbar
+          open={Boolean(cartNotice)}
+          autoHideDuration={3200}
+          onClose={() => setCartNotice(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{ bottom: { xs: 92, sm: 32 } }}
+        >
+          <Alert
+            severity="success"
+            variant="filled"
+            onClose={() => setCartNotice(null)}
+            action={(
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate('/client/checkout')}
+                sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}
+              >
+                View cart
+              </Button>
+            )}
+            sx={{
+              width: '100%',
+              alignItems: 'center',
+              borderRadius: 2,
+              fontWeight: 700,
+              boxShadow: '0 12px 30px rgba(15, 23, 42, 0.28)',
+            }}
+          >
+            {cartNotice?.productName} added to cart
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );

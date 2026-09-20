@@ -83,15 +83,15 @@ async function seedDatabase() {
     // Insert sample products
     console.log('\n📦 Creating sample products...');
     const products = [
-      { name: 'Coca-Cola 1.5L', description: 'Soft drink bottle 1.5 liters', price: 55.00, stock: 50, category: 'Beverages', status: 'active', created_by: staffUser?.id },
-      { name: 'Chips Ahoy Cookies', description: 'Chocolate chip cookies 150g', price: 45.00, stock: 30, category: 'Snacks', status: 'active', created_by: staffUser?.id },
-      { name: 'Mega Sardines', description: 'Sardines in tomato sauce 155g', price: 25.00, stock: 40, category: 'Canned Goods', status: 'active', created_by: staffUser?.id },
-      { name: 'Nescafe 3-in-1 (30 packs)', description: 'Instant coffee mix 30 sticks', price: 120.00, stock: 20, category: 'Beverages', status: 'active', created_by: staffUser?.id },
-      { name: 'Skyflakes Crackers', description: 'Saltine crackers 25g', price: 8.00, stock: 100, category: 'Snacks', status: 'active', created_by: staffUser?.id },
-      { name: 'Lucky Me Instant Noodles', description: 'Chicken flavor instant noodles', price: 15.00, stock: 60, category: 'Noodles', status: 'active', created_by: staffUser?.id },
-      { name: 'Bear Brand Powdered Milk', description: 'Powdered milk 300g', price: 95.00, stock: 25, category: 'Dairy', status: 'active', created_by: staffUser?.id },
-      { name: 'Pancit Canton (Sweet & Spicy)', description: 'Instant stir-fry noodles', price: 18.00, stock: 45, category: 'Noodles', status: 'active', created_by: staffUser?.id },
-      { name: 'Safeguard Soap', description: 'Antibacterial soap 90g', price: 35.00, stock: 35, category: 'Personal Care', status: 'active', created_by: staffUser?.id }
+      { name: 'Coca-Cola 1.5L', description: 'Soft drink bottle 1.5 liters', price: 55.00, stock: 50, category: 'Beverages', image_url: '/product-images/coca-cola-1-5l.jpg', status: 'active', created_by: staffUser?.id },
+      { name: 'Chips Ahoy Cookies', description: 'Chocolate chip cookies 150g', price: 45.00, stock: 30, category: 'Snacks', image_url: '/product-images/chips-ahoy-cookies.jpg', status: 'active', created_by: staffUser?.id },
+      { name: 'Mega Sardines', description: 'Sardines in tomato sauce 155g', price: 25.00, stock: 40, category: 'Canned Goods', image_url: '/product-images/mega-sardines.webp', status: 'active', created_by: staffUser?.id },
+      { name: 'Nescafe 3-in-1 (30 packs)', description: 'Instant coffee mix 30 sticks', price: 120.00, stock: 20, category: 'Beverages', image_url: '/product-images/nescafe-3-in-1-30-packs.jpg', status: 'active', created_by: staffUser?.id },
+      { name: 'Skyflakes Crackers', description: 'Saltine crackers 25g', price: 8.00, stock: 100, category: 'Snacks', image_url: '/product-images/skyflakes-crackers.webp', status: 'active', created_by: staffUser?.id },
+      { name: 'Lucky Me Spicy Labuyo Beef', description: 'Spicy Labuyo Beef flavor instant noodles', price: 15.00, stock: 60, category: 'Noodles', image_url: '/product-images/lucky-me-spicy-labuyo-beef.webp', status: 'active', created_by: staffUser?.id },
+      { name: 'Bear Brand Adult Plus', description: 'Adult Plus powdered milk 300g', price: 95.00, stock: 25, category: 'Dairy', image_url: '/product-images/bear-brand-adult-plus.jpg', status: 'active', created_by: staffUser?.id },
+      { name: 'Pancit Canton (Sweet & Spicy)', description: 'Instant stir-fry noodles', price: 18.00, stock: 45, category: 'Noodles', image_url: '/product-images/pancit-canton-sweet-spicy.webp', status: 'active', created_by: staffUser?.id },
+      { name: 'Safeguard Soap', description: 'Antibacterial soap 90g', price: 35.00, stock: 35, category: 'Personal Care', image_url: '/product-images/safeguard-soap.webp', status: 'active', created_by: staffUser?.id },
     ];
 
     for (const product of products) {

@@ -1,11 +1,13 @@
 const { db } = require('../config/db');
 
 const TransactionModel = {
-  async create({ receipt_number, user_id, staff_id, total_amount, payment_method, items }) {
+  async create({ receipt_number, user_id, staff_id, total_amount, payment_method, tendered_amount, change_amount, items }) {
     // Insert transaction
     const transaction = await db.transactions.insert({
       receipt_number, user_id: user_id || null, staff_id,
-      total_amount: parseFloat(total_amount), payment_method
+      total_amount: parseFloat(total_amount), payment_method,
+      ...(tendered_amount !== undefined ? { tendered_amount: parseFloat(tendered_amount) } : {}),
+      ...(change_amount !== undefined ? { change_amount: parseFloat(change_amount) } : {})
     });
 
     // Insert transaction items and update stock
@@ -32,8 +34,8 @@ const TransactionModel = {
     const sortedTransactions = transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     return Promise.all(sortedTransactions.map(async t => {
-      const user = t.user_id ? await db.users.findById(t.user_id) : null;
-      const staff = await db.users.findById(t.staff_id);
+      const user = t.user_id ? await db.clients.findById(t.user_id) : null;
+      const staff = await db.staff.findById(t.staff_id);
       return {
         ...t,
         user_name: user ? user.name : null,
@@ -46,8 +48,8 @@ const TransactionModel = {
     const transaction = await db.transactions.findById(id);
     if (!transaction) return null;
 
-    const user = transaction.user_id ? await db.users.findById(transaction.user_id) : null;
-    const staff = await db.users.findById(transaction.staff_id);
+    const user = transaction.user_id ? await db.clients.findById(transaction.user_id) : null;
+    const staff = await db.staff.findById(transaction.staff_id);
     const items = await db.transaction_items.find({ transaction_id: id });
     
     const itemsWithProductName = await Promise.all(items.map(async item => {
@@ -68,7 +70,7 @@ const TransactionModel = {
     const sortedTransactions = transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     return Promise.all(sortedTransactions.map(async t => {
-      const staff = await db.users.findById(t.staff_id);
+      const staff = await db.staff.findById(t.staff_id);
       return { ...t, staff_name: staff ? staff.name : null };
     }));
   },
@@ -78,7 +80,7 @@ const TransactionModel = {
     const sortedTransactions = transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     return Promise.all(sortedTransactions.map(async t => {
-      const user = t.user_id ? await db.users.findById(t.user_id) : null;
+      const user = t.user_id ? await db.clients.findById(t.user_id) : null;
       return { ...t, user_name: user ? user.name : null };
     }));
   },
@@ -172,8 +174,8 @@ const TransactionModel = {
       .slice(0, limit);
 
     return Promise.all(transactions.map(async t => {
-      const user = t.user_id ? await db.users.findById(t.user_id) : null;
-      const staff = await db.users.findById(t.staff_id);
+      const user = t.user_id ? await db.clients.findById(t.user_id) : null;
+      const staff = await db.staff.findById(t.staff_id);
       return {
         ...t,
         user_name: user ? user.name : null,

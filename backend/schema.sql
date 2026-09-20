@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     staff_id INT NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     payment_method ENUM('cash', 'pos') NOT NULL DEFAULT 'cash',
+    tendered_amount DECIMAL(10, 2),
+    change_amount DECIMAL(10, 2),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE CASCADE

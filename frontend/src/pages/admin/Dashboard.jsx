@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, CircularProgress, Chip, Button } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, CircularProgress, Chip, Button, Stack } from '@mui/material';
 import { People, CheckCircle, Pending, Description, Assessment, ArrowForward, Inventory, Receipt, WbSunny, WbCloudy, NightsStay, Storefront, LockReset, PersonAdd } from '@mui/icons-material';
 import { Alert } from '@mui/material';
 import API from '../../api/axios';
@@ -50,6 +50,25 @@ const AdminDashboard = () => {
       </Box>
     );
   }
+
+  const getStatStyles = (name) => {
+    switch (String(name || '').toLowerCase()) {
+      case 'blue':
+        return { colorHex: '#1E40AF', background: 'linear-gradient(135deg,#BFDBFE,#60A5FA)' };
+      case 'green':
+        return { colorHex: '#047857', background: 'linear-gradient(135deg,#CCFBF1,#86EFAC)' };
+      case 'orange':
+        return { colorHex: '#B45309', background: 'linear-gradient(135deg,#FED7AA,#FDBA74)' };
+      case 'red':
+        return { colorHex: '#B91C1C', background: 'linear-gradient(135deg,#FECACA,#FCA5A5)' };
+      case 'teal':
+        return { colorHex: '#0F766E', background: 'linear-gradient(135deg,#CCFBF1,#99F6E4)' };
+      case 'purple':
+        return { colorHex: '#6D28D9', background: 'linear-gradient(135deg,#E9D5FF,#C4B5FD)' };
+      default:
+        return { colorHex: '#0D9488', background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)' };
+    }
+  };
 
   const statCards = [
     { label: 'Total Users', value: stats?.totalUsers || 0, icon: <People />, color: 'blue', link: '/admin/accounts' },
@@ -116,27 +135,64 @@ const quickActions = [
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statCards.map((stat, index) => (
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={4}
-            key={stat.label}
-            className={`animate-fade-in animate-delay-${index + 1}`}
-          >
-            <Card
-              className={`stat-card ${stat.color}`}
-              onClick={() => navigate(stat.link)}
+        {statCards.map((stat, index) => {
+          const styles = getStatStyles(stat.color);
+          return (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={stat.label}
+              className={`animate-fade-in animate-delay-${index + 1}`}
             >
-              <CardContent>
-                {stat.icon}
-                <Typography variant="h3">{stat.value}</Typography>
-                <Typography variant="body2">{stat.label}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+              <Card
+                elevation={0}
+                onClick={() => navigate(stat.link)}
+                sx={{
+                  height: '100%',
+                  cursor: 'pointer',
+                  bgcolor: '#FFFFFF',
+                  border: '1px solid #E8EEF3',
+                  borderRadius: 3,
+                  transition: 'all .22s ease',
+                  '&:hover': {
+                    transform: 'translateY(-6px)',
+                    boxShadow: '0 18px 40px rgba(2,6,23,.06)',
+                    borderColor: 'transparent',
+                  },
+                }}
+              >
+                <CardContent sx={{ p: '18px !important' }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Box sx={{
+                      width: 52,
+                      height: 52,
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: styles.background,
+                      color: styles.colorHex,
+                      borderRadius: 2,
+                    }}>
+                      {stat.icon}
+                    </Box>
+
+                    <ArrowForward sx={{ color: '#CBD5E1', fontSize: 20 }} />
+                  </Stack>
+
+                  <Typography sx={{ mt: 2, color: '#0F172A', fontSize: 28, lineHeight: 1, fontWeight: 900 }}>
+                    {stat.value}
+                  </Typography>
+
+                  <Typography sx={{ mt: 0.8, color: '#475569', fontSize: 13, fontWeight: 800 }}>
+                    {stat.label}
+                  </Typography>
+
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
       {/* Quick Actions */}

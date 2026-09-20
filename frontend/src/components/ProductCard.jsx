@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Card,
   CardMedia,
@@ -16,6 +16,7 @@ import {
   FavoriteBorderRounded,
   FavoriteRounded,
   ShoppingCartRounded,
+  CheckRounded,
   ImageNotSupportedRounded,
 } from '@mui/icons-material';
 
@@ -30,6 +31,20 @@ const ProductCard = ({
   onAddToCart,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const addedTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(addedTimerRef.current), []);
+
+  const handleAddToCart = (event) => {
+    event.stopPropagation();
+    const result = onAddToCart?.(product);
+    if (!result?.ok) return;
+
+    setIsAdded(true);
+    clearTimeout(addedTimerRef.current);
+    addedTimerRef.current = setTimeout(() => setIsAdded(false), 1600);
+  };
 
   const getImageUrl = () => {
     if (product?.image_url) return product.image_url;
@@ -96,6 +111,7 @@ const ProductCard = ({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              objectPosition: 'center 38%',
               transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
@@ -227,10 +243,9 @@ const ProductCard = ({
             fullWidth
             startIcon={<ShoppingCartRounded />}
             onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart?.(product);
+              handleAddToCart(e);
             }}
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || isAdded}
             sx={{
               py: 1,
               bgcolor: '#0D9488',
@@ -247,13 +262,19 @@ const ProductCard = ({
                 boxShadow: '0 6px 20px rgba(13, 148, 136, 0.6)',
               },
               '&.Mui-disabled': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                color: '#64748B',
+                bgcolor: isAdded ? '#0F766E' : 'rgba(255, 255, 255, 0.1)',
+                color: isAdded ? '#CCFBF1' : '#64748B',
                 boxShadow: 'none',
               },
             }}
           >
-            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {isOutOfStock ? (
+              'Out of Stock'
+            ) : isAdded ? (
+              <><CheckRounded sx={{ fontSize: 18 }} /> Added</>
+            ) : (
+              'Add to Cart'
+            )}
           </Button>
         </Box>
       </Box>

@@ -73,6 +73,7 @@ const INITIAL_FORM = {
 const ReceiptManagement = () => {
   const [transactions, setTransactions] = useState([]);
   const [walkInRequests, setWalkInRequests] = useState([]);
+  const [cancelledRequests, setCancelledRequests] = useState([]);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
 
@@ -90,6 +91,7 @@ const ReceiptManagement = () => {
 
   const [search, setSearch] = useState("");
   const [customerFilter, setCustomerFilter] = useState("all");
+  const [clientSearch, setClientSearch] = useState("");
 
   const [alert, setAlert] = useState({
     show: false,
@@ -100,6 +102,7 @@ const ReceiptManagement = () => {
   const [formData, setFormData] = useState(INITIAL_FORM);
 
   const alertTimerRef = useRef(null);
+  const knownCancelledRequestIdsRef = useRef(null);
 
   /* =========================================================
      ALERT
@@ -138,13 +141,32 @@ const ReceiptManagement = () => {
           setLoading(true);
         }
 
-        const [transactionsResponse, productsResponse, usersResponse, walkInResponse] =
+        const [transactionsResponse, productsResponse, usersResponse, walkInResponse, cancelledResponse] =
           await Promise.all([
             API.get("/transactions"),
             API.get("/products?active=true"),
             API.get("/users?role=client"),
             API.get("/transactions/walk-in-requests/pending"),
+            API.get("/transactions/walk-in-requests/cancelled"),
           ]);
+
+        const cancelledRequests = Array.isArray(cancelledResponse.data)
+          ? cancelledResponse.data
+          : [];
+        const cancelledRequestIds = new Set(cancelledRequests.map((request) => request.id));
+
+        if (knownCancelledRequestIdsRef.current) {
+          const newlyCancelled = cancelledRequests.find(
+            (request) => !knownCancelledRequestIdsRef.current.has(request.id),
+          );
+          if (newlyCancelled) {
+            showAlert(
+              `Order #${newlyCancelled.id} from ${newlyCancelled.submitted_by_name || "a client"} was cancelled.`,
+              "warning",
+            );
+          }
+        }
+        knownCancelledRequestIdsRef.current = cancelledRequestIds;
 
         setTransactions(
           Array.isArray(transactionsResponse.data)
@@ -160,6 +182,7 @@ const ReceiptManagement = () => {
         setWalkInRequests(
           Array.isArray(walkInResponse.data) ? walkInResponse.data : [],
         );
+        setCancelledRequests(cancelledRequests);
       } catch (error) {
         console.error("Failed to load receipt data:", error);
 
@@ -538,6 +561,16 @@ const ReceiptManagement = () => {
     });
   }, [transactions, search, customerFilter]);
 
+  const filteredClients = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase();
+    if (!query) return users;
+
+    return users.filter((user) =>
+      [user.name, user.email, user.user_id, user.id]
+        .some((value) => String(value || "").toLowerCase().includes(query)),
+    );
+  }, [users, clientSearch]);
+
   /* =========================================================
      LOADING
   ========================================================= */
@@ -744,6 +777,61 @@ const ReceiptManagement = () => {
         >
           {alert.message}
         </Alert>
+      )}
+
+      {cancelledRequests.length > 0 && (
+        <Box className="no-print" sx={{ mb: 3 }}>
+          <Alert
+            severity="warning"
+            icon={<WarningAmberRounded />}
+            sx={{ mb: 1.5, borderRadius: 3 }}
+          >
+            {cancelledRequests.length === 1
+              ? `Order #${cancelledRequests[0].id} from ${cancelledRequests[0].submitted_by_name || "a client"} was cancelled.`
+              : `${cancelledRequests.length} client orders were cancelled.`}
+          </Alert>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 2.5 },
+              borderRadius: 3,
+              border: "1px solid #FDE68A",
+              bgcolor: "#FFFBEB",
+            }}
+          >
+            <Typography sx={{ color: "#92400E", fontSize: 16, fontWeight: 850, mb: 1.2 }}>
+              Cancelled Walk-in Orders
+            </Typography>
+            <Stack spacing={1}>
+              {cancelledRequests.map((request) => (
+                <Box
+                  key={request.id}
+                  sx={{
+                    p: 1.5,
+                    bgcolor: "#FFFFFF",
+                    border: "1px solid #FDE68A",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
+                    <Box>
+                      <Typography sx={{ color: "#0F172A", fontSize: 13.5, fontWeight: 800 }}>
+                        Order #{request.id} · {request.submitted_by_name || "Client"}
+                      </Typography>
+                      <Typography sx={{ color: "#64748B", fontSize: 11.5, mt: 0.25 }}>
+                        {Array.isArray(request.data?.items) ? request.data.items.map((item) => `${item.name || "Product"} x${item.quantity}`).join(", ") : "No item details"}
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ color: "#92400E", fontSize: 11.5, whiteSpace: "nowrap" }}>
+                      {formatDate(request.reviewed_at || request.created_at)}
+                    </Typography>
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          </Paper>
+        </Box>
       )}
 
       {/* =====================================================
@@ -1468,6 +1556,22 @@ const ReceiptManagement = () => {
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Search registered client"
+                placeholder="Name, email, or account ID"
+                value={clientSearch}
+                onChange={(event) => setClientSearch(event.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRounded sx={{ color: "#94A3B8" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 1.2 }}
+              />
               <FormControl fullWidth>
                 <InputLabel>Client</InputLabel>
 
@@ -1484,13 +1588,18 @@ const ReceiptManagement = () => {
                 >
                   <MenuItem value="">Walk-in Customer</MenuItem>
 
-                  {users.map((user) => (
+                  {filteredClients.map((user) => (
                     <MenuItem key={user.id} value={user.id}>
-                      {user.name} — {user.email}
+                      {user.name} — {user.email || user.user_id || `#${user.id}`}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
+              {clientSearch.trim() && filteredClients.length === 0 && (
+                <Typography sx={{ mt: 0.8, color: "#B45309", fontSize: 12 }}>
+                  No registered client found.
+                </Typography>
+              )}
             </Grid>
 
             <Grid item xs={12} md={4}>

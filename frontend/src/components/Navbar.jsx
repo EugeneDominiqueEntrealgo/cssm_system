@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+
 import {
   AppBar,
   Toolbar,
@@ -13,47 +14,58 @@ import {
   Avatar,
   Divider,
   ListItemIcon,
-  Tooltip,
-  Chip,
   Fade,
+  Stack,
 } from "@mui/material";
+
 import {
   Menu as MenuIcon,
-  Home,
-  Dashboard,
-  Inventory,
-  Receipt,
-  LocalOffer,
-  People,
-  Logout,
-  AccountCircle,
-  Assessment,
-  Storefront,
-  ExpandMore,
-  Sparkles,
+  HomeRounded,
+  DashboardRounded,
+  Inventory2Rounded,
+  ReceiptLongRounded,
+  LocalOfferRounded,
+  PeopleAltRounded,
+  LogoutRounded,
+  AccountCircleRounded,
+  AssessmentRounded,
+  StorefrontRounded,
+  ExpandMoreRounded,
+  ArrowForwardRounded,
 } from "@mui/icons-material";
-import { colors } from "../theme";
 
-const Navbar = () => {
+const Navbar = ({ homepage = false }) => {
   const { user, logout, isAuthenticated, isAdmin, isStaff, isClient } =
     useAuth();
+
   const navigate = useNavigate();
   const location = useLocation();
-  const isDashboardRoute = /^(\/admin|\/staff|\/client)\//.test(location.pathname);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [mobileMenuEl, setMobileMenuEl] = useState(null);
+
+  const isDashboardRoute = /^(\/admin|\/staff|\/client)\//.test(
+    location.pathname,
+  );
+
+  const [profileAnchor, setProfileAnchor] = useState(null);
+  const [mobileAnchor, setMobileAnchor] = useState(null);
 
   const handleLogout = () => {
-    setAnchorEl(null);
-    setMobileMenuEl(null);
+    setProfileAnchor(null);
+    setMobileAnchor(null);
     logout();
     navigate("/");
+  };
+
+  const handleNavigate = (link) => {
+    setMobileAnchor(null);
+    setProfileAnchor(null);
+    navigate(link);
   };
 
   const getDashboardLink = () => {
     if (isAdmin) return "/admin/dashboard";
     if (isStaff) return "/staff/dashboard";
     if (isClient) return "/client/dashboard";
+
     return "/";
   };
 
@@ -62,572 +74,1145 @@ const Navbar = () => {
       return [
         {
           label: "Dashboard",
-          icon: <Dashboard fontSize="small" />,
+          icon: <DashboardRounded fontSize="small" />,
           link: "/admin/dashboard",
         },
         {
           label: "Accounts",
-          icon: <People fontSize="small" />,
+          icon: <PeopleAltRounded fontSize="small" />,
           link: "/admin/accounts",
         },
         {
           label: "Staff Approvals",
-          icon: <People fontSize="small" />,
+          icon: <PeopleAltRounded fontSize="small" />,
           link: "/admin/approvals/staff",
         },
         {
           label: "Client Approvals",
-          icon: <People fontSize="small" />,
+          icon: <PeopleAltRounded fontSize="small" />,
           link: "/admin/approvals/clients",
         },
         {
           label: "Submissions",
-          icon: <Inventory fontSize="small" />,
+          icon: <Inventory2Rounded fontSize="small" />,
           link: "/admin/approvals/submissions",
         },
         {
           label: "Reports",
-          icon: <Assessment fontSize="small" />,
+          icon: <AssessmentRounded fontSize="small" />,
           link: "/admin/reports",
         },
       ];
     }
+
     if (isStaff) {
       return [
         {
           label: "Dashboard",
-          icon: <Dashboard fontSize="small" />,
+          icon: <DashboardRounded fontSize="small" />,
           link: "/staff/dashboard",
         },
         {
           label: "Products",
-          icon: <Inventory fontSize="small" />,
+          icon: <Inventory2Rounded fontSize="small" />,
           link: "/staff/products",
         },
         {
           label: "Receipts",
-          icon: <Receipt fontSize="small" />,
+          icon: <ReceiptLongRounded fontSize="small" />,
           link: "/staff/receipts",
         },
         {
           label: "Promos",
-          icon: <LocalOffer fontSize="small" />,
+          icon: <LocalOfferRounded fontSize="small" />,
           link: "/staff/promos",
         },
         {
           label: "Users",
-          icon: <People fontSize="small" />,
+          icon: <PeopleAltRounded fontSize="small" />,
           link: "/staff/users",
         },
         {
           label: "Submissions",
-          icon: <Inventory fontSize="small" />,
+          icon: <Inventory2Rounded fontSize="small" />,
           link: "/staff/submissions",
         },
       ];
     }
+
     if (isClient) {
       return [
         {
           label: "Dashboard",
-          icon: <Dashboard fontSize="small" />,
+          icon: <DashboardRounded fontSize="small" />,
           link: "/client/dashboard",
         },
         {
           label: "Order History",
-          icon: <Receipt fontSize="small" />,
+          icon: <ReceiptLongRounded fontSize="small" />,
           link: "/client/history",
         },
         {
           label: "Profile",
-          icon: <AccountCircle fontSize="small" />,
+          icon: <AccountCircleRounded fontSize="small" />,
           link: "/client/profile",
         },
       ];
     }
+
     return [];
   };
 
   const navItems = getNavItems();
 
   const isActive = (link) => {
-    if (link === "/") return location.pathname === "/";
+    if (link === "/") {
+      return location.pathname === "/";
+    }
+
     return location.pathname.startsWith(link);
   };
 
-  const roleBadge = {
-    admin: { label: "Admin", color: "#FF5252", bg: "rgba(255, 82, 82, 0.12)" },
-    staff: { label: "Staff", color: "#3B82F6", bg: "rgba(59, 130, 246, 0.12)" },
-    client: {
-      label: "Client",
-      color: "#10B981",
-      bg: "rgba(16, 185, 129, 0.12)",
-    },
+  const getUserInitial = () => {
+    const name = user?.name?.trim();
+
+    if (!name) {
+      return "U";
+    }
+
+    return name.charAt(0).toUpperCase();
   };
 
-  const getRoleBadge = () => {
-    const role = user?.role?.toLowerCase();
-    if (!role) return null;
-    return (
-      roleBadge[role] || {
-        label: role,
-        color: "#5EEAD4",
-        bg: "rgba(94, 234, 212, 0.12)",
-      }
-    );
+  const getRoleStyle = () => {
+    const role = String(user?.role || "").toLowerCase();
+
+    switch (role) {
+      case "admin":
+        return {
+          label: "Administrator",
+          color: "#DC2626",
+          bg: "#FEF2F2",
+        };
+
+      case "staff":
+        return {
+          label: "Staff",
+          color: "#2563EB",
+          bg: "#EFF6FF",
+        };
+
+      case "client":
+        return {
+          label: "Client",
+          color: "#047857",
+          bg: "#ECFDF5",
+        };
+
+      default:
+        return {
+          label: role || "User",
+          color: "#475569",
+          bg: "#F1F5F9",
+        };
+    }
   };
+
+  const roleStyle = getRoleStyle();
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        background: `linear-gradient(135deg, ${colors.dark || "#0F172A"} 0%, ${colors.primaryDark || "#1E293B"} 100%)`,
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-        boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.3)",
-        color: "#fff",
-      }}
-    >
-      <Toolbar sx={{ py: 1, gap: 1.5, minHeight: { xs: 64, md: 70 } }}>
-        {/* Brand Logo */}
-        <Box
+    <>
+      <AppBar
+        position={homepage ? "fixed" : "sticky"}
+        elevation={0}
+        sx={{
+          zIndex: 1200,
+
+          ...(homepage && {
+            top: { xs: 10, sm: 14 },
+            left: { xs: 12, sm: 20, md: 32 },
+            right: { xs: 12, sm: 20, md: 32 },
+            width: "auto",
+            border: "1px solid rgba(255,255,255,.18)",
+            borderRadius: "18px",
+            background: "rgba(255,255,255,.9)",
+            boxShadow: "0 16px 40px rgba(4, 46, 40, .16)",
+            borderBottom: "1px solid rgba(204,218,213,.8)",
+          }),
+
+          background:
+            homepage
+              ? "rgba(255,255,255,.9)"
+              : "linear-gradient(90deg, rgba(250,252,251,.96) 0%, rgba(255,255,255,.98) 55%, rgba(248,251,250,.96) 100%)",
+
+          color: "#173D36",
+
+          borderBottom: "1px solid rgba(204,218,213,.8)",
+
+          backdropFilter: "blur(18px)",
+
+          boxShadow: "0 6px 24px rgba(33,64,56,.045)",
+        }}
+      >
+        <Toolbar
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            mr: { xs: 0, md: 3 },
-            cursor: "pointer",
-            userSelect: "none",
-            visibility: isDashboardRoute ? "hidden" : "visible",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            "&:hover": {
-              transform: "translateY(-1px)",
-              "& .logo-icon": {
-                transform: "rotate(-8deg) scale(1.1)",
-                boxShadow: "0 0 20px rgba(94, 234, 212, 0.4)",
-              },
+            width: "100%",
+
+            maxWidth: 1440,
+
+            mx: "auto",
+
+            px: {
+              xs: 2,
+              sm: 3,
+              md: 4,
             },
+
+            minHeight: {
+              xs: 64,
+              md: 72,
+            },
+
+            ...(homepage && {
+              minHeight: { xs: 58, md: 66 },
+              px: { xs: 1.4, sm: 2.2, md: 3 },
+            }),
+
+            gap: 1.5,
           }}
-          onClick={() => navigate("/")}
         >
+          {/* ================= BRAND ================= */}
+
           <Box
-            className="logo-icon"
+            onClick={() => navigate("/")}
             sx={{
-              background:
-                "linear-gradient(135deg, rgba(94,234,212,0.2) 0%, rgba(45,212,191,0.05) 100%)",
-              borderRadius: "12px",
-              p: 0.8,
               display: "flex",
+
               alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid rgba(94, 234, 212, 0.3)",
-              transition: "all 0.3s ease",
+
+              gap: 1.15,
+
+              cursor: "pointer",
+
+              userSelect: "none",
+
+              flexShrink: 0,
+
+              mr: {
+                xs: 0,
+                md: 2.5,
+              },
+
+              transition: "transform .2s ease",
+
+              "&:hover": {
+                transform: "translateY(-1px)",
+              },
             }}
           >
-            <Storefront sx={{ fontSize: 26, color: "#5EEAD4" }} />
-          </Box>
-          <Box sx={{ display: { xs: "none", sm: "block" } }}>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 800,
-                lineHeight: 1.1,
-                letterSpacing: "0.8px",
-                background: "linear-gradient(90deg, #FFFFFF 0%, #E2E8F0 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontSize: "1.05rem",
-              }}
-            >
-              StoreHub
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: "0.65rem",
-                color: "#94A3B8",
-                fontWeight: 500,
-                letterSpacing: "0.5px",
-                display: "block",
-              }}
-            >
-              Sari-Sari Store System
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Desktop Navigation Links */}
-        <Box
-          sx={{
-            display: isDashboardRoute ? "none" : { xs: "none", md: "flex" },
-            flexGrow: 1,
-            gap: 1,
-            alignItems: "center",
-          }}
-        >
-          {navItems.map((item) => {
-            const active = isActive(item.link);
-            return (
-              <Button
-                key={item.link}
-                onClick={() => navigate(item.link)}
-                startIcon={item.icon}
-                disableRipple
-                sx={{
-                  color: active ? "#5EEAD4" : "#94A3B8",
-                  fontWeight: active ? 700 : 500,
-                  fontSize: "0.875rem",
-                  textTransform: "none",
-                  bgcolor: active ? "rgba(94, 234, 212, 0.1)" : "transparent",
-                  borderRadius: "10px",
-                  px: 2,
-                  py: 0.8,
-                  border: active
-                    ? "1px solid rgba(94, 234, 212, 0.25)"
-                    : "1px solid transparent",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: active
-                      ? "rgba(94, 234, 212, 0.15)"
-                      : "rgba(255, 255, 255, 0.05)",
-                    color: active ? "#5EEAD4" : "#F8FAFC",
-                    transform: "translateY(-1px)",
-                  },
-                }}
-              >
-                {item.label}
-              </Button>
-            );
-          })}
-        </Box>
-
-        {/* Right Section (Profile & Actions) */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            ml: "auto",
-          }}
-        >
-          {isAuthenticated ? (
             <Box
-              onClick={(e) => setAnchorEl(e.currentTarget)}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.2,
-                p: 0.6,
-                pr: 1.2,
-                borderRadius: "30px",
-                cursor: "pointer",
-                bgcolor: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  bgcolor: "rgba(255, 255, 255, 0.08)",
-                  borderColor: "rgba(255, 255, 255, 0.15)",
+                width: 42,
+                height: 42,
+
+                display: "grid",
+                placeItems: "center",
+
+                borderRadius: "13px",
+
+                background: "linear-gradient(145deg, #174E44 0%, #0F766E 100%)",
+
+                color: "#FDE68A",
+
+                boxShadow: "0 8px 20px rgba(15,118,110,.16)",
+
+                position: "relative",
+
+                overflow: "hidden",
+
+                "&::after": {
+                  content: '""',
+
+                  position: "absolute",
+
+                  width: 20,
+                  height: 20,
+
+                  top: -9,
+                  right: -7,
+
+                  borderRadius: "50%",
+
+                  bgcolor: "rgba(255,255,255,.15)",
                 },
               }}
             >
-              <Box sx={{ position: "relative" }}>
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    background:
-                      "linear-gradient(135deg, #5EEAD4 0%, #0D9488 100%)",
-                    color: "#0F172A",
-                    fontWeight: 800,
-                    fontSize: 15,
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                  }}
-                >
-                  {user?.name?.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    right: 0,
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "#10B981",
-                    border: "2px solid #0F172A",
-                  }}
-                />
-              </Box>
-
-              <Box
-                sx={{ display: { xs: "none", sm: "block" }, textAlign: "left" }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "#F8FAFC",
-                    fontWeight: 600,
-                    lineHeight: 1.2,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {user?.name}
-                </Typography>
-                {getRoleBadge() && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: getRoleBadge().color,
-                      fontWeight: 700,
-                      fontSize: "0.625rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {getRoleBadge().label}
-                  </Typography>
-                )}
-              </Box>
-
-              <ExpandMore
+              <StorefrontRounded
                 sx={{
-                  fontSize: 18,
-                  color: "#94A3B8",
-                  transition: "transform 0.2s ease",
-                  transform: Boolean(anchorEl)
-                    ? "rotate(180deg)"
-                    : "rotate(0deg)",
+                  fontSize: 23,
+                  position: "relative",
+                  zIndex: 1,
                 }}
               />
             </Box>
-          ) : (
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={() => navigate("/login")}
+
+            <Box
               sx={{
-                background: "linear-gradient(135deg, #0D9488 0%, #0F766E 100%)",
-                color: "#FFFFFF",
-                fontWeight: 700,
-                borderRadius: "10px",
-                px: 2.5,
-                py: 0.8,
-                textTransform: "none",
-                boxShadow: "0 4px 12px rgba(13, 148, 136, 0.3)",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #0F766E 0%, #115E59 100%)",
-                  transform: "translateY(-1px)",
-                  boxShadow: "0 6px 16px rgba(13, 148, 136, 0.4)",
+                display: {
+                  xs: "block",
+                  sm: "block",
                 },
               }}
             >
-              Login
-            </Button>
+              <Typography
+                sx={{
+                  color: "#173D36",
+
+                  fontSize: {
+                    xs: "1rem",
+                    sm: "1.08rem",
+                  },
+
+                  fontWeight: 900,
+
+                  lineHeight: 1,
+
+                  letterSpacing: "-.035em",
+                }}
+              >
+                StoreHub
+              </Typography>
+
+              <Typography
+                sx={{
+                  display: {
+                    xs: "none",
+                    sm: "block",
+                  },
+
+                  mt: 0.3,
+
+                  color: "#8A9A95",
+
+                  fontSize: "0.6rem",
+
+                  fontWeight: 600,
+
+                  letterSpacing: ".025em",
+                }}
+              >
+                Local store management
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* ================= DESKTOP NAV ================= */}
+
+          {!isDashboardRoute && isAuthenticated && (
+            <Box
+              sx={{
+                display: {
+                  xs: "none",
+                  lg: "flex",
+                },
+
+                flex: 1,
+
+                alignItems: "center",
+
+                gap: 0.5,
+
+                minWidth: 0,
+              }}
+            >
+              {navItems.map((item) => {
+                const active = isActive(item.link);
+
+                return (
+                  <Button
+                    key={item.link}
+                    onClick={() => navigate(item.link)}
+                    startIcon={item.icon}
+                    disableRipple
+                    sx={{
+                      position: "relative",
+
+                      minHeight: 40,
+
+                      px: 1.35,
+
+                      borderRadius: "10px",
+
+                      textTransform: "none",
+
+                      fontSize: "0.77rem",
+
+                      fontWeight: active ? 800 : 700,
+
+                      whiteSpace: "nowrap",
+
+                      color: active ? "#0F766E" : "#63756F",
+
+                      bgcolor: active ? "#EDF8F4" : "transparent",
+
+                      transition: "all .18s ease",
+
+                      "& .MuiButton-startIcon": {
+                        mr: 0.65,
+
+                        "& svg": {
+                          fontSize: 18,
+                        },
+                      },
+
+                      "&::after": active
+                        ? {
+                            content: '""',
+
+                            position: "absolute",
+
+                            bottom: -3,
+
+                            left: "50%",
+
+                            width: 18,
+                            height: 2.5,
+
+                            transform: "translateX(-50%)",
+
+                            borderRadius: 10,
+
+                            bgcolor: "#0F766E",
+                          }
+                        : {},
+
+                      "&:hover": {
+                        bgcolor: active ? "#E5F5F0" : "#F4F7F6",
+
+                        color: "#0F766E",
+                      },
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                );
+              })}
+            </Box>
           )}
 
-          {/* Mobile Hamburger Button */}
-          <IconButton
-            edge="end"
-            onClick={(e) => setMobileMenuEl(e.currentTarget)}
+          {/* spacer for public pages */}
+
+          {!isAuthenticated && (
+            <Box
+              sx={{
+                flex: 1,
+              }}
+            />
+          )}
+
+          {/* ================= RIGHT SIDE ================= */}
+
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
             sx={{
-              display: isDashboardRoute ? "none" : { md: "none" },
-              color: "#F8FAFC",
-              bgcolor: "rgba(255, 255, 255, 0.05)",
-              p: 1,
-              borderRadius: "10px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" },
+              ml: "auto",
             }}
           >
-            <MenuIcon fontSize="small" />
-          </IconButton>
+            {/* ================= AUTHENTICATED USER ================= */}
 
-          {/* Desktop Dropdown Menu */}
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-            TransitionComponent={Fade}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                mt: 1.5,
-                minWidth: 230,
-                borderRadius: "16px",
-                boxShadow:
-                  "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)",
-                border: "1px solid rgba(226, 232, 240, 0.8)",
-                overflow: "hidden",
-                p: 0.5,
+            {isAuthenticated ? (
+              <Box
+                onClick={(event) => setProfileAnchor(event.currentTarget)}
+                sx={{
+                  display: "flex",
+
+                  alignItems: "center",
+
+                  gap: 1,
+
+                  pl: 0.55,
+
+                  pr: {
+                    xs: 0.8,
+                    sm: 1.2,
+                  },
+
+                  py: 0.5,
+
+                  cursor: "pointer",
+
+                  borderRadius: "999px",
+
+                  border: "1px solid #DFE8E5",
+
+                  bgcolor: "#FFFFFF",
+
+                  boxShadow: "0 4px 12px rgba(15,23,42,.035)",
+
+                  transition: "all .2s ease",
+
+                  "&:hover": {
+                    borderColor: "#BFD7CF",
+
+                    bgcolor: "#F8FBFA",
+
+                    boxShadow: "0 7px 18px rgba(15,23,42,.055)",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "relative",
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 34,
+                      height: 34,
+
+                      bgcolor: "#174E44",
+
+                      color: "#FDE68A",
+
+                      fontSize: "0.76rem",
+
+                      fontWeight: 900,
+                    }}
+                  >
+                    {getUserInitial()}
+                  </Avatar>
+
+                  <Box
+                    sx={{
+                      position: "absolute",
+
+                      right: -1,
+                      bottom: 0,
+
+                      width: 9,
+                      height: 9,
+
+                      bgcolor: "#22C55E",
+
+                      borderRadius: "50%",
+
+                      border: "2px solid #FFFFFF",
+                    }}
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    display: {
+                      xs: "none",
+                      sm: "block",
+                    },
+
+                    minWidth: 0,
+
+                    maxWidth: 145,
+                  }}
+                >
+                  <Typography
+                    noWrap
+                    sx={{
+                      color: "#253F38",
+
+                      fontSize: "0.72rem",
+
+                      fontWeight: 800,
+
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {user?.name || "StoreHub User"}
+                  </Typography>
+
+                  <Typography
+                    noWrap
+                    sx={{
+                      mt: 0.15,
+
+                      color: roleStyle.color,
+
+                      fontSize: "0.57rem",
+
+                      fontWeight: 800,
+
+                      textTransform: "uppercase",
+
+                      letterSpacing: ".04em",
+                    }}
+                  >
+                    {roleStyle.label}
+                  </Typography>
+                </Box>
+
+                <ExpandMoreRounded
+                  sx={{
+                    display: {
+                      xs: "none",
+                      sm: "block",
+                    },
+
+                    fontSize: 18,
+
+                    color: "#83938E",
+
+                    transition: "transform .2s ease",
+
+                    transform: Boolean(profileAnchor)
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                  }}
+                />
+              </Box>
+            ) : (
+              <Button
+                onClick={() => navigate("/login")}
+                endIcon={
+                  <ArrowForwardRounded
+                    sx={{
+                      fontSize: "17px !important",
+                    }}
+                  />
+                }
+                sx={{
+                  minHeight: 40,
+
+                  px: {
+                    xs: 1.7,
+                    sm: 2.1,
+                  },
+
+                  borderRadius: "11px",
+
+                  bgcolor: "#174E44",
+
+                  color: "#FFFFFF",
+
+                  textTransform: "none",
+
+                  fontSize: "0.76rem",
+
+                  fontWeight: 800,
+
+                  boxShadow: "0 7px 18px rgba(23,78,68,.16)",
+
+                  "&:hover": {
+                    bgcolor: "#0F766E",
+
+                    boxShadow: "0 9px 22px rgba(15,118,110,.2)",
+                  },
+                }}
+              >
+                Sign In
+              </Button>
+            )}
+
+            {/* ================= MOBILE MENU BUTTON ================= */}
+
+            {!isDashboardRoute && isAuthenticated && (
+              <IconButton
+                onClick={(event) => setMobileAnchor(event.currentTarget)}
+                sx={{
+                  display: {
+                    xs: "flex",
+                    lg: "none",
+                  },
+
+                  width: 40,
+                  height: 40,
+
+                  borderRadius: "11px",
+
+                  bgcolor: "#F5F8F7",
+
+                  border: "1px solid #E0E8E5",
+
+                  color: "#31534B",
+
+                  "&:hover": {
+                    bgcolor: "#EDF5F2",
+
+                    color: "#0F766E",
+                  },
+                }}
+              >
+                <MenuIcon
+                  sx={{
+                    fontSize: 21,
+                  }}
+                />
+              </IconButton>
+            )}
+          </Stack>
+        </Toolbar>
+      </AppBar>
+
+      {/* ========================================================= */}
+      {/* PROFILE MENU */}
+      {/* ========================================================= */}
+
+      <Menu
+        anchorEl={profileAnchor}
+        open={Boolean(profileAnchor)}
+        onClose={() => setProfileAnchor(null)}
+        TransitionComponent={Fade}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        PaperProps={{
+          elevation: 0,
+
+          sx: {
+            width: 260,
+
+            mt: 1.2,
+
+            p: 0.8,
+
+            borderRadius: "16px",
+
+            border: "1px solid #DEE7E4",
+
+            bgcolor: "#FFFFFF",
+
+            boxShadow: "0 18px 45px rgba(27,51,44,.13)",
+          },
+        }}
+      >
+        {/* user summary */}
+
+        <Box
+          sx={{
+            p: 1.5,
+
+            borderRadius: "12px",
+
+            bgcolor: "#F7FAF9",
+
+            border: "1px solid #ECF1EF",
+
+            mb: 0.7,
+          }}
+        >
+          <Stack direction="row" spacing={1.2} alignItems="center">
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+
+                bgcolor: "#174E44",
+
+                color: "#FDE68A",
+
+                fontSize: "0.82rem",
+
+                fontWeight: 900,
+              }}
+            >
+              {getUserInitial()}
+            </Avatar>
+
+            <Box
+              sx={{
+                minWidth: 0,
+              }}
+            >
+              <Typography
+                noWrap
+                sx={{
+                  color: "#233F38",
+
+                  fontSize: "0.78rem",
+
+                  fontWeight: 900,
+                }}
+              >
+                {user?.name || "StoreHub User"}
+              </Typography>
+
+              <Typography
+                noWrap
+                sx={{
+                  mt: 0.15,
+
+                  color: "#83918D",
+
+                  fontSize: "0.64rem",
+                }}
+              >
+                {user?.email || ""}
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Box
+            sx={{
+              display: "inline-flex",
+
+              alignItems: "center",
+
+              mt: 1.2,
+
+              px: 0.9,
+
+              py: 0.4,
+
+              borderRadius: "999px",
+
+              bgcolor: roleStyle.bg,
+
+              color: roleStyle.color,
+
+              fontSize: "0.57rem",
+
+              fontWeight: 900,
+
+              textTransform: "uppercase",
+
+              letterSpacing: ".05em",
+            }}
+          >
+            {roleStyle.label}
+          </Box>
+        </Box>
+
+        <MenuItem
+          onClick={() => handleNavigate(getDashboardLink())}
+          sx={{
+            py: 1.05,
+
+            px: 1.2,
+
+            borderRadius: "10px",
+
+            color: "#405650",
+
+            fontSize: "0.76rem",
+
+            fontWeight: 700,
+
+            "&:hover": {
+              bgcolor: "#F2F7F5",
+
+              color: "#0F766E",
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: "34px !important",
+            }}
+          >
+            <DashboardRounded
+              sx={{
+                fontSize: 19,
+
+                color: "#0F766E",
+              }}
+            />
+          </ListItemIcon>
+          Open Dashboard
+        </MenuItem>
+
+        {isClient && (
+          <MenuItem
+            onClick={() => handleNavigate("/client/profile")}
+            sx={{
+              py: 1.05,
+
+              px: 1.2,
+
+              borderRadius: "10px",
+
+              color: "#405650",
+
+              fontSize: "0.76rem",
+
+              fontWeight: 700,
+
+              "&:hover": {
+                bgcolor: "#F2F7F5",
+
+                color: "#0F766E",
               },
             }}
           >
-            <Box
+            <ListItemIcon
               sx={{
-                px: 2,
-                py: 1.5,
-                bgcolor: "#F8FAFC",
-                borderRadius: "12px",
-                mb: 0.5,
+                minWidth: "34px !important",
               }}
             >
-              <Typography variant="subtitle2" fontWeight={700} color="#0F172A">
-                {user?.name}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="#64748B"
-                display="block"
-                sx={{ wordBreak: "break-all" }}
-              >
-                {user?.email}
-              </Typography>
-            </Box>
+              <AccountCircleRounded
+                sx={{
+                  fontSize: 19,
 
+                  color: "#64748B",
+                }}
+              />
+            </ListItemIcon>
+            My Profile
+          </MenuItem>
+        )}
+
+        <Divider
+          sx={{
+            my: 0.6,
+          }}
+        />
+
+        <MenuItem
+          onClick={handleLogout}
+          sx={{
+            py: 1.05,
+
+            px: 1.2,
+
+            borderRadius: "10px",
+
+            color: "#DC2626",
+
+            fontSize: "0.76rem",
+
+            fontWeight: 800,
+
+            "&:hover": {
+              bgcolor: "#FEF2F2",
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: "34px !important",
+            }}
+          >
+            <LogoutRounded
+              sx={{
+                fontSize: 19,
+
+                color: "#DC2626",
+              }}
+            />
+          </ListItemIcon>
+          Sign Out
+        </MenuItem>
+      </Menu>
+
+      {/* ========================================================= */}
+      {/* MOBILE NAVIGATION */}
+      {/* ========================================================= */}
+
+      <Menu
+        anchorEl={mobileAnchor}
+        open={Boolean(mobileAnchor)}
+        onClose={() => setMobileAnchor(null)}
+        TransitionComponent={Fade}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        PaperProps={{
+          elevation: 0,
+
+          sx: {
+            width: {
+              xs: "calc(100vw - 28px)",
+              sm: 320,
+            },
+
+            maxWidth: 340,
+
+            mt: 1,
+
+            p: 1,
+
+            borderRadius: "16px",
+
+            border: "1px solid #DEE7E4",
+
+            boxShadow: "0 20px 50px rgba(27,51,44,.16)",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            p: 1.2,
+
+            mb: 0.7,
+
+            borderRadius: "12px",
+
+            background: "linear-gradient(135deg, #F2F8F6 0%, #FBFCFC 100%)",
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#173D36",
+
+              fontSize: "0.72rem",
+
+              fontWeight: 900,
+            }}
+          >
+            Navigation
+          </Typography>
+
+          <Typography
+            sx={{
+              mt: 0.25,
+
+              color: "#899894",
+
+              fontSize: "0.61rem",
+            }}
+          >
+            StoreHub workspace menu
+          </Typography>
+        </Box>
+
+        <MenuItem
+          onClick={() => handleNavigate("/")}
+          sx={{
+            py: 1,
+
+            borderRadius: "10px",
+
+            color: location.pathname === "/" ? "#0F766E" : "#465B55",
+
+            bgcolor: location.pathname === "/" ? "#EFF8F5" : "transparent",
+
+            fontSize: "0.76rem",
+
+            fontWeight: location.pathname === "/" ? 800 : 700,
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: "35px !important",
+            }}
+          >
+            <HomeRounded
+              sx={{
+                fontSize: 19,
+
+                color: location.pathname === "/" ? "#0F766E" : "#71837D",
+              }}
+            />
+          </ListItemIcon>
+          Home
+        </MenuItem>
+
+        {navItems.length > 0 && (
+          <Divider
+            sx={{
+              my: 0.7,
+            }}
+          />
+        )}
+
+        {navItems.map((item) => {
+          const active = isActive(item.link);
+
+          return (
             <MenuItem
-              onClick={() => {
-                setAnchorEl(null);
-                navigate(getDashboardLink());
-              }}
+              key={item.link}
+              onClick={() => handleNavigate(item.link)}
               sx={{
-                borderRadius: "8px",
                 py: 1,
+
                 my: 0.2,
-                fontWeight: 500,
-                fontSize: "0.875rem",
-                color: "#334155",
-                "&:hover": { bgcolor: "#F1F5F9", color: "#0D9488" },
+
+                borderRadius: "10px",
+
+                bgcolor: active ? "#EFF8F5" : "transparent",
+
+                color: active ? "#0F766E" : "#465B55",
+
+                fontSize: "0.76rem",
+
+                fontWeight: active ? 800 : 700,
+
+                "&:hover": {
+                  bgcolor: active ? "#E8F5F1" : "#F5F8F7",
+                },
               }}
             >
-              <ListItemIcon>
-                <Dashboard fontSize="small" sx={{ color: "#0D9488" }} />
-              </ListItemIcon>
-              Dashboard
-            </MenuItem>
+              <ListItemIcon
+                sx={{
+                  minWidth: "35px !important",
+                }}
+              >
+                {React.cloneElement(item.icon, {
+                  sx: {
+                    fontSize: 19,
 
-            <Divider sx={{ my: 0.5 }} />
+                    color: active ? "#0F766E" : "#71837D",
+                  },
+                })}
+              </ListItemIcon>
+
+              {item.label}
+            </MenuItem>
+          );
+        })}
+
+        {isAuthenticated && (
+          <>
+            <Divider
+              sx={{
+                my: 0.7,
+              }}
+            />
 
             <MenuItem
               onClick={handleLogout}
               sx={{
-                borderRadius: "8px",
                 py: 1,
-                my: 0.2,
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                color: "#EF4444",
-                "&:hover": { bgcolor: "#FEF2F2" },
+
+                borderRadius: "10px",
+
+                color: "#DC2626",
+
+                fontSize: "0.76rem",
+
+                fontWeight: 800,
+
+                "&:hover": {
+                  bgcolor: "#FEF2F2",
+                },
               }}
             >
-              <ListItemIcon>
-                <Logout fontSize="small" sx={{ color: "#EF4444" }} />
-              </ListItemIcon>
-              Logout
-            </MenuItem>
-          </Menu>
-
-          {/* Mobile Navigation Drawer Menu */}
-          <Menu
-            anchorEl={mobileMenuEl}
-            open={Boolean(mobileMenuEl)}
-            onClose={() => setMobileMenuEl(null)}
-            TransitionComponent={Fade}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                mt: 1.5,
-                minWidth: 250,
-                borderRadius: "16px",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
-                border: "1px solid rgba(226, 232, 240, 0.8)",
-                p: 1,
-              },
-            }}
-          >
-            <MenuItem
-              onClick={() => {
-                setMobileMenuEl(null);
-                navigate("/");
-              }}
-              sx={{
-                borderRadius: "8px",
-                py: 1,
-                fontWeight: 500,
-                color: "#334155",
-                "&:hover": { bgcolor: "#F1F5F9" },
-              }}
-            >
-              <ListItemIcon>
-                <Home fontSize="small" sx={{ color: "#64748B" }} />
-              </ListItemIcon>
-              Home
-            </MenuItem>
-
-            <Divider sx={{ my: 0.5 }} />
-
-            {navItems.map((item) => {
-              const active = isActive(item.link);
-              return (
-                <MenuItem
-                  key={item.link}
-                  onClick={() => {
-                    setMobileMenuEl(null);
-                    navigate(item.link);
-                  }}
+              <ListItemIcon
+                sx={{
+                  minWidth: "35px !important",
+                }}
+              >
+                <LogoutRounded
                   sx={{
-                    borderRadius: "8px",
-                    py: 1,
-                    my: 0.2,
-                    bgcolor: active
-                      ? "rgba(13, 148, 136, 0.08)"
-                      : "transparent",
-                    color: active ? "#0D9488" : "#334155",
-                    fontWeight: active ? 700 : 500,
-                    "&:hover": { bgcolor: "#F1F5F9" },
-                  }}
-                >
-                  <ListItemIcon>
-                    {React.cloneElement(item.icon, {
-                      fontSize: "small",
-                      sx: { color: active ? "#0D9488" : "#64748B" },
-                    })}
-                  </ListItemIcon>
-                  {item.label}
-                </MenuItem>
-              );
-            })}
+                    fontSize: 19,
 
-            {isAuthenticated && (
-              <>
-                <Divider sx={{ my: 0.5 }} />
-                <MenuItem
-                  onClick={handleLogout}
-                  sx={{
-                    borderRadius: "8px",
-                    py: 1,
-                    color: "#EF4444",
-                    fontWeight: 600,
-                    "&:hover": { bgcolor: "#FEF2F2" },
+                    color: "#DC2626",
                   }}
-                >
-                  <ListItemIcon>
-                    <Logout fontSize="small" sx={{ color: "#EF4444" }} />
-                  </ListItemIcon>
-                  Logout
-                </MenuItem>
-              </>
-            )}
-          </Menu>
-        </Box>
-      </Toolbar>
-    </AppBar>
+                />
+              </ListItemIcon>
+              Sign Out
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+    </>
   );
 };
 

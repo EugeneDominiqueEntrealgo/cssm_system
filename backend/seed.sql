@@ -7,18 +7,18 @@ INSERT INTO users (user_id, name, email, password, role, status) VALUES
 ('U100001', 'Staff User', 'staff@store.com', '$2a$10$8KzQMGx5F5G5G5G5G5G5Gu5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G', 'staff', 'active'),
 ('U100002', 'Juan Customer', 'juan@email.com', '$2a$10$8KzQMGx5F5G5G5G5G5Gu5G5G5G5G5G5G5G5G5G5G5G5G5G5G5G', 'client', 'active');
 
--- Sample products
 INSERT INTO products (name, description, price, stock, category, status, created_by) VALUES
-('Coca-Cola 1.5L', 'Soft drink bottle 1.5 liters', 55.00, 50, 'Beverages', 'active', 2),
-('Chips Ahoy Cookies', 'Chocolate chip cookies 150g', 45.00, 30, 'Snacks', 'active', 2),
-('Mega Sardines', 'Sardines in tomato sauce 155g', 25.00, 40, 'Canned Goods', 'active', 2),
-('Nescafe 3-in-1 (30 packs)', 'Instant coffee mix 30 sticks', 120.00, 20, 'Beverages', 'active', 2),
-('Skyflakes Crackers', 'Saltine crackers 25g', 8.00, 100, 'Snacks', 'active', 2),
-('Lucky Me Instant Noodles', 'Chicken flavor instant noodles', 15.00, 60, 'Noodles', 'active', 2),
-('Coca-Cola 1.5L', 'Soft drink 1.5L', 25.00, 80, 'Beverages', 'active', 2),
-('Bear Brand Powdered Milk', 'Powdered milk 300g', 95.00, 25, 'Dairy', 'active', 2),
-('Pancit Canton (Sweet & Spicy)', 'Instant stir-fry noodles', 18.00, 45, 'Noodles', 'active', 2),
-('Safeguard Soap', 'Antibacterial soap 90g', 35.00, 35, 'Personal Care', 'active', 2);
+INSERT INTO products (name, description, price, stock, category, image_url, status, created_by) VALUES
+('Coca-Cola 1.5L', 'Soft drink bottle 1.5 liters', 55.00, 50, 'Beverages', '/product-images/coca-cola-1-5l.jpg', 'active', 2),
+('Chips Ahoy Cookies', 'Chocolate chip cookies 150g', 45.00, 30, 'Snacks', '/product-images/chips-ahoy-cookies.jpg', 'active', 2),
+('Mega Sardines', 'Sardines in tomato sauce 155g', 25.00, 40, 'Canned Goods', '/product-images/mega-sardines.webp', 'active', 2),
+('Nescafe 3-in-1 (30 packs)', 'Instant coffee mix 30 sticks', 120.00, 20, 'Beverages', '/product-images/nescafe-3-in-1-30-packs.jpg', 'active', 2),
+('Skyflakes Crackers', 'Saltine crackers 25g', 8.00, 100, 'Snacks', '/product-images/skyflakes-crackers.webp', 'active', 2),
+('Lucky Me Spicy Labuyo Beef', 'Spicy Labuyo Beef flavor instant noodles', 15.00, 60, 'Noodles', '/product-images/lucky-me-spicy-labuyo-beef.webp', 'active', 2),
+('Coca-Cola 1.5L', 'Soft drink bottle 1.5L', 25.00, 80, 'Beverages', '/product-images/coca-cola-1-5l.jpg', 'active', 2),
+('Bear Brand Adult Plus', 'Adult Plus powdered milk 300g', 95.00, 25, 'Dairy', '/product-images/bear-brand-adult-plus.jpg', 'active', 2),
+('Pancit Canton (Sweet & Spicy)', 'Instant stir-fry noodles', 18.00, 45, 'Noodles', '/product-images/pancit-canton-sweet-spicy.webp', 'active', 2),
+('Safeguard Soap', 'Antibacterial soap 90g', 35.00, 35, 'Personal Care', '/product-images/safeguard-soap.webp', 'active', 2);
 
 -- Sample promos
 INSERT INTO promos (title, description, discount_type, discount_value, start_date, end_date, status, created_by) VALUES

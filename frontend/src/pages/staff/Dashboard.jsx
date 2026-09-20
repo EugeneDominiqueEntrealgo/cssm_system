@@ -37,6 +37,7 @@ import {
   ReceiptLongOutlined,
   RefreshRounded,
   ScheduleRounded,
+  ShoppingCartRounded,
   StorefrontRounded,
   TrendingUpRounded,
   WarningAmberRounded,
@@ -402,34 +403,19 @@ const StaffDashboard = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100%',
-        bgcolor: '#F8FAFC',
-        p: {
-          xs: 2,
-          sm: 3,
-        },
-      }}
-    >
+    <Box className="page-container">
       {/* HERO HEADER */}
 
       <Paper
         elevation={0}
+        className="dashboard-hero"
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          mb: 3,
-          p: {
-            xs: 3,
-            md: 4,
-          },
+          mb: 0,
           color: '#FFFFFF',
-          borderRadius: 5,
           background:
             'linear-gradient(135deg, #022C22 0%, #064E3B 45%, #047857 100%)',
-          boxShadow:
-            '0 18px 45px rgba(6,78,59,.16)',
         }}
       >
         <Box
@@ -817,24 +803,19 @@ const StaffDashboard = () => {
                 height: '100%',
                 cursor: 'pointer',
                 bgcolor: '#FFFFFF',
-                border:
-                  '1px solid #E2E8F0',
-                borderRadius: 4,
-                transition:
-                  'all .22s ease',
+                border: '1px solid #E8EEF3',
+                borderRadius: 3,
+                transition: 'all .22s ease',
                 '&:hover': {
-                  transform:
-                    'translateY(-4px)',
-                  borderColor:
-                    '#CFE7DE',
-                  boxShadow:
-                    '0 16px 36px rgba(15,23,42,.07)',
+                  transform: 'translateY(-6px)',
+                  boxShadow: '0 18px 40px rgba(2,6,23,.06)',
+                  borderColor: 'transparent',
                 },
               }}
             >
               <CardContent
                 sx={{
-                  p: '22px !important',
+                  p: '18px !important',
                 }}
               >
                 <Stack
@@ -844,8 +825,8 @@ const StaffDashboard = () => {
                 >
                   <Box
                     sx={{
-                      width: 48,
-                      height: 48,
+                      width: 52,
+                      height: 52,
                       display: 'grid',
                       placeItems: 'center',
                       bgcolor:
@@ -860,7 +841,7 @@ const StaffDashboard = () => {
                   <ArrowForwardRounded
                     sx={{
                       color: '#CBD5E1',
-                      fontSize: 19,
+                      fontSize: 20,
                     }}
                   />
                 </Stack>
@@ -869,7 +850,7 @@ const StaffDashboard = () => {
                   sx={{
                     mt: 2.3,
                     color: '#0F172A',
-                    fontSize: 27,
+                    fontSize: 28,
                     lineHeight: 1,
                     fontWeight: 900,
                     letterSpacing: '-.03em',
@@ -882,8 +863,8 @@ const StaffDashboard = () => {
                   sx={{
                     mt: 0.8,
                     color: '#475569',
-                    fontSize: 12.5,
-                    fontWeight: 750,
+                    fontSize: 13,
+                    fontWeight: 800,
                   }}
                 >
                   {stat.label}

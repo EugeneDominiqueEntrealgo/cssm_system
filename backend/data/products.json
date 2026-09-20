@@ -6,6 +6,7 @@
     "price": 55,
     "stock": 50,
     "category": "Beverages",
+    "image_url": "/product-images/coca-cola-1-5l.jpg",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.991Z"
@@ -17,6 +18,7 @@
     "price": 45,
     "stock": 30,
     "category": "Snacks",
+    "image_url": "/product-images/chips-ahoy-cookies.jpg",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.992Z"
@@ -28,6 +30,7 @@
     "price": 25,
     "stock": 40,
     "category": "Canned Goods",
+    "image_url": "/product-images/mega-sardines.webp",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.992Z"
@@ -39,6 +42,7 @@
     "price": 120,
     "stock": 20,
     "category": "Beverages",
+    "image_url": "/product-images/nescafe-3-in-1-30-packs.jpg",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.993Z"
@@ -50,28 +54,31 @@
     "price": 8,
     "stock": 100,
     "category": "Snacks",
+    "image_url": "/product-images/skyflakes-crackers.webp",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.994Z"
   },
   {
     "id": 6,
-    "name": "Lucky Me Instant Noodles",
-    "description": "Chicken flavor instant noodles",
+    "name": "Lucky Me Spicy Labuyo Beef",
+    "description": "Spicy Labuyo Beef flavor instant noodles",
     "price": 15,
     "stock": 60,
     "category": "Noodles",
+    "image_url": "/product-images/lucky-me-spicy-labuyo-beef.webp",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.994Z"
   },
   {
     "id": 7,
-    "name": "Bear Brand Powdered Milk",
-    "description": "Powdered milk 300g",
+    "name": "Bear Brand Adult Plus",
+    "description": "Adult Plus powdered milk 300g",
     "price": 95,
     "stock": 25,
     "category": "Dairy",
+    "image_url": "/product-images/bear-brand-adult-plus.jpg",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.995Z"
@@ -83,6 +90,7 @@
     "price": 18,
     "stock": 45,
     "category": "Noodles",
+    "image_url": "/product-images/pancit-canton-sweet-spicy.webp",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.996Z"
@@ -94,6 +102,7 @@
     "price": 35,
     "stock": 35,
     "category": "Personal Care",
+    "image_url": "/product-images/safeguard-soap.webp",
     "status": "active",
     "created_by": 2,
     "created_at": "2026-07-31T07:21:20.997Z"
