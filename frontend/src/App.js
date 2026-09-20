@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
+import { Analytics } from '@vercel/analytics/react';
 
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -62,32 +63,33 @@ function App() {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-      }}
-    >
-      {/* ========================================
-          PUBLIC NAVBAR
-          Hidden on Admin / Staff / Client pages
-      ======================================== */}
-      {!isDashboardRoute && !isHomeRoute && !isLoginRoute && !isRegisterClientRoute && <Navbar />}
-
-      {/* ========================================
-          MAIN CONTENT
-      ======================================== */}
+    <>
       <Box
-        component="main"
         sx={{
-          flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
+          minHeight: '100vh',
         }}
       >
-        <Routes>
+        {/* ========================================
+            PUBLIC NAVBAR
+            Hidden on Admin / Staff / Client pages
+        ======================================== */}
+        {!isDashboardRoute && !isHomeRoute && !isLoginRoute && !isRegisterClientRoute && <Navbar />}
+
+        {/* ========================================
+            MAIN CONTENT
+        ======================================== */}
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+          }}
+        >
+          <Routes>
           {/* =====================================
               PUBLIC ROUTES
           ===================================== */}
@@ -328,7 +330,9 @@ function App() {
         Now:
           <Homepage /> <-- usa ra ka footer
       */}
-    </Box>
+      </Box>
+      <Analytics />
+    </>
   );
 }
 
