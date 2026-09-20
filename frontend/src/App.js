@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
+import { Analytics } from '@vercel/analytics/react';
 
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -328,6 +329,7 @@ function App() {
         Now:
           <Homepage /> <-- usa ra ka footer
       */}
+      <Analytics />
     </Box>
   );
 }
